@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Management - Audit Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="fas fa-users-cog me-2"></i>Employee Management
+        </h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newEmployeeModal">
+            <i class="fas fa-user-plus me-2"></i>Add New Employee
+        </button>
+    </div>
+    
+    <!-- Employee Statistics -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ total_employees or 0 }}</div>
+                            <div class="small">Total Employees</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ active_employees or 0 }}</div>
+                            <div class="small">Active Employees</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ departments_count or 0 }}</div>
+                            <div class="small">Departments</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-building fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">₹{{ "{:,.0f}".format(avg_salary or 0) }}</div>
+                            <div class="small">Average Salary</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-rupee-sign fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Employees Table -->
+    {% if employees and employees.items %}
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>Employee Directory
+                    </h5>
+                    <div class="btn-group btn-group-sm">
+                        <select class="form-select form-select-sm" id="departmentFilter">
+                            <option value="">All Departments</option>
+                            <option value="Audit">Audit</option>
+                            <option value="Tax">Tax</option>
+                            <option value="Accounts">Accounts</option>
+                            <option value="Administration">Administration</option>
+                        </select>
+                        <select class="form-select form-select-sm" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="employeesTable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Employee ID</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Joining Date</th>
+                                <th>Salary</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in employees.items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                 style="width: 40px; height: 40px;">
+                                                <span class="text-white fw-bold">{{ employee.name[:2].upper() }}</span>
+                                            </div>
+                                            <div>
+                                                <strong>{{ employee.name }}</strong>
+                                                {% if employee.email %}
+                                                    <br><small class="text-muted">{{ employee.email }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if employee.employee_id %}
+                                            <code>{{ employee.employee_id }}</code>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if employee.department %}
+                                            <span class="badge bg-info">{{ employee.department }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ employee.designation or '-' }}</td>
+                                    <td>
+                                        {% if employee.date_of_joining %}
+                                            {{ employee.date_of_joining.strftime('%d/%m/%Y') }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if employee.salary %}
+                                            ₹{{ "{:,.0f}".format(employee.salary) }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if employee.status == 'Active' else 'secondary' }}">
+                                            {{ employee.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Edit" 
+                                                    onclick="editEmployee({{ employee.id }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info" title="View Details" 
+                                                    data-bs-toggle="modal" data-bs-target="#employeeModal{{ employee.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" title="Payroll History" 
+                                                    onclick="viewPayrollHistory({{ employee.id }})">
+                                                <i class="fas fa-money-check-alt"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if employees.pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if employees.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.employees', page=employees.prev_num) }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in employees.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != employees.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('main.employees', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if employees.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.employees', page=employees.next_num) }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-users-cog fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No employees found</h4>
+                <p class="text-muted">Start by adding your first employee.</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newEmployeeModal">
+                    <i class="fas fa-user-plus me-2"></i>Add First Employee
+                </button>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- New Employee Modal -->
+<div class="modal fade" id="newEmployeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('main.new_employee') }}">
+                {% if form %}
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control") }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.employee_id.label(class="form-label") }}
+                                {{ form.employee_id(class="form-control", placeholder="Auto-generated") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.email.label(class="form-label") }}
+                                {{ form.email(class="form-control") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.phone.label(class="form-label") }}
+                                {{ form.phone(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.pan.label(class="form-label") }}
+                                {{ form.pan(class="form-control", placeholder="ABCDE1234F") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.date_of_joining.label(class="form-label") }}
+                                {{ form.date_of_joining(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.designation.label(class="form-label") }}
+                                {{ form.designation(class="form-control") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.department.label(class="form-label") }}
+                                {{ form.department(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.salary.label(class="form-label") }}
+                                {{ form.salary(class="form-control", step="0.01") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.status.label(class="form-label") }}
+                                {{ form.status(class="form-select") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Employee</button>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Employee Detail Modals -->
+{% if employees and employees.items %}
+    {% for employee in employees.items %}
+        <div class="modal fade" id="employeeModal{{ employee.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ employee.name }} - Employee Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Personal Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Name:</strong></td>
+                                        <td>{{ employee.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Employee ID:</strong></td>
+                                        <td>{{ employee.employee_id or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>{{ employee.email or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Phone:</strong></td>
+                                        <td>{{ employee.phone or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>PAN:</strong></td>
+                                        <td>{{ employee.pan or '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Employment Details</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Designation:</strong></td>
+                                        <td>{{ employee.designation or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Department:</strong></td>
+                                        <td>{{ employee.department or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Joining Date:</strong></td>
+                                        <td>{{ employee.date_of_joining.strftime('%d/%m/%Y') if employee.date_of_joining else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Salary:</strong></td>
+                                        <td>₹{{ "{:,.2f}".format(employee.salary or 0) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if employee.status == 'Active' else 'secondary' }}">
+                                                {{ employee.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-primary" onclick="editEmployee({{ employee.id }})">Edit Employee</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#employeesTable').DataTable({
+            "paging": false,
+            "info": false,
+            "searching": true,
+            "ordering": true,
+            "columnDefs": [
+                { "orderable": false, "targets": -1 }
+            ]
+        });
+        
+        // Department and status filters
+        $('#departmentFilter, #statusFilter').on('change', function() {
+            // Implement filtering logic
+            console.log('Filtering employees');
+        });
+    });
+    
+    function editEmployee(id) {
+        alert('Edit functionality to be implemented for Employee ID: ' + id);
+    }
+    
+    function viewPayrollHistory(id) {
+        alert('Payroll history functionality to be implemented for Employee ID: ' + id);
+    }
+    
+    // Auto-format PAN input
+    $(document).on('input', '#pan', function() {
+        this.value = this.value.toUpperCase();
+    });
+    
+    // Auto-generate employee ID
+    $('#name').on('blur', function() {
+        if (!$('#employee_id').val()) {
+            const name = $(this).val();
+            if (name) {
+                const initials = name.split(' ').map(word => word[0]).join('').toUpperCase();
+                const timestamp = Date.now().toString().slice(-4);
+                $('#employee_id').val('EMP' + initials + timestamp);
+            }
+        }
+    });
+</script>
+{% endblock %}

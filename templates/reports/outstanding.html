@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}Outstanding Fees Report - Audit Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="fas fa-exclamation-triangle me-2"></i>Outstanding Fees Report
+        </h1>
+        <div class="btn-group">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newOutstandingModal">
+                <i class="fas fa-plus me-2"></i>Add Outstanding Fee
+            </button>
+            <button class="btn btn-outline-secondary" onclick="generateOutstandingReport()">
+                <i class="fas fa-file-excel me-2"></i>Export Report
+            </button>
+        </div>
+    </div>
+    
+    <!-- Outstanding Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">₹{{ "{:,.2f}".format(total_outstanding or 0) }}</div>
+                            <div class="small">Total Outstanding</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-rupee-sign fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ overdue_count or 0 }}</div>
+                            <div class="small">Overdue Invoices</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ pending_count or 0 }}</div>
+                            <div class="small">Pending Payments</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hourglass-half fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ this_month_collection or 0 }}</div>
+                            <div class="small">This Month Collections</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Outstanding Fees Table -->
+    {% if outstanding and outstanding.items %}
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>Outstanding Fees
+                    </h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary" onclick="filterByStatus('all')">All</button>
+                        <button class="btn btn-outline-warning" onclick="filterByStatus('pending')">Pending</button>
+                        <button class="btn btn-outline-danger" onclick="filterByStatus('overdue')">Overdue</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="outstandingTable">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Service Type</th>
+                                <th>Invoice No.</th>
+                                <th>Amount</th>
+                                <th>Due Date</th>
+                                <th>Days Overdue</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fee in outstanding.items %}
+                                <tr class="{{ 'table-danger' if fee.due_date and fee.due_date < date.today() and fee.status == 'Pending' else '' }}">
+                                    <td>
+                                        <strong>{{ fee.client.name }}</strong>
+                                        {% if fee.client.phone %}
+                                            <br><small class="text-muted">{{ fee.client.phone }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ fee.service_type }}</td>
+                                    <td>
+                                        {% if fee.invoice_number %}
+                                            <code>{{ fee.invoice_number }}</code>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-bold">₹{{ "{:,.2f}".format(fee.amount) }}</td>
+                                    <td>
+                                        {% if fee.due_date %}
+                                            {{ fee.due_date.strftime('%d/%m/%Y') }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if fee.due_date and fee.status == 'Pending' %}
+                                            {% set days_diff = (date.today() - fee.due_date).days %}
+                                            {% if days_diff > 0 %}
+                                                <span class="badge bg-danger">{{ days_diff }} days</span>
+                                            {% elif days_diff == 0 %}
+                                                <span class="badge bg-warning">Due Today</span>
+                                            {% else %}
+                                                <span class="badge bg-success">{{ -days_diff }} days left</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if fee.status == 'Paid' else 'danger' if fee.status == 'Overdue' else 'warning' }}">
+                                            {{ fee.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Edit" 
+                                                    onclick="editOutstanding({{ fee.id }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            {% if fee.status == 'Pending' %}
+                                                <button class="btn btn-outline-success" title="Mark as Paid" 
+                                                        onclick="markAsPaid({{ fee.id }})">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            {% endif %}
+                                            <button class="btn btn-outline-info" title="Send Reminder" 
+                                                    onclick="sendReminder({{ fee.id }})">
+                                                <i class="fas fa-bell"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary" title="Generate Invoice" 
+                                                    onclick="generateInvoice({{ fee.id }})">
+                                                <i class="fas fa-file-invoice"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if outstanding.pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if outstanding.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.outstanding_reports', page=outstanding.prev_num) }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in outstanding.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != outstanding.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('main.outstanding_reports', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if outstanding.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.outstanding_reports', page=outstanding.next_num) }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <h4 class="text-success">No outstanding fees found</h4>
+                <p class="text-muted">All invoices are up to date!</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newOutstandingModal">
+                    <i class="fas fa-plus me-2"></i>Add Outstanding Fee
+                </button>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Outstanding Analytics -->
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Outstanding Trend
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="outstandingTrendChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Status Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusBreakdownChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Outstanding Fee Modal -->
+<div class="modal fade" id="newOutstandingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Outstanding Fee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('main.new_outstanding_fee') }}">
+                {% if form %}
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.client_id.label(class="form-label") }}
+                                {{ form.client_id(class="form-select") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.service_type.label(class="form-label") }}
+                                {{ form.service_type(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.amount.label(class="form-label") }}
+                                {{ form.amount(class="form-control", step="0.01") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.due_date.label(class="form-label") }}
+                                {{ form.due_date(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.invoice_number.label(class="form-label") }}
+                                {{ form.invoice_number(class="form-control", placeholder="Auto-generated") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.status.label(class="form-label") }}
+                                {{ form.status(class="form-select") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Outstanding Fee</button>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#outstandingTable').DataTable({
+            "paging": false,
+            "info": false,
+            "searching": true,
+            "ordering": true,
+            "order": [[4, "asc"]], // Sort by due date
+            "columnDefs": [
+                { "orderable": false, "targets": -1 }
+            ]
+        });
+        
+        // Initialize charts
+        initOutstandingTrendChart();
+        initStatusBreakdownChart();
+    });
+    
+    function filterByStatus(status) {
+        // Implement status filtering
+        console.log('Filtering by status:', status);
+    }
+    
+    function editOutstanding(id) {
+        alert('Edit functionality to be implemented for Outstanding Fee ID: ' + id);
+    }
+    
+    function markAsPaid(id) {
+        if (confirm('Mark this fee as paid?')) {
+            fetch(`/api/outstanding/${id}/mark-paid`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error updating status');
+                }
+            });
+        }
+    }
+    
+    function sendReminder(id) {
+        if (confirm('Send payment reminder to client?')) {
+            fetch(`/api/outstanding/${id}/send-reminder`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Reminder sent successfully');
+                } else {
+                    alert('Error sending reminder');
+                }
+            });
+        }
+    }
+    
+    function generateInvoice(id) {
+        window.open(`/api/outstanding/${id}/invoice`, '_blank');
+    }
+    
+    function generateOutstandingReport() {
+        window.location.href = '/api/reports/outstanding/export';
+    }
+    
+    function initOutstandingTrendChart() {
+        const ctx = document.getElementById('outstandingTrendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Outstanding Amount',
+                    data: [50000, 45000, 60000, 35000, 40000, 30000],
+                    borderColor: 'var(--bs-danger)',
+                    backgroundColor: 'var(--bs-danger)',
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'var(--bs-body-color)'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'var(--bs-body-color)',
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'var(--bs-body-color)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initStatusBreakdownChart() {
+        const ctx = document.getElementById('statusBreakdownChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'Overdue', 'Paid'],
+                datasets: [{
+                    data: [12, 5, 25],
+                    backgroundColor: [
+                        'var(--bs-warning)',
+                        'var(--bs-danger)',
+                        'var(--bs-success)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'var(--bs-body-color)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Auto-generate invoice number
+    $('#service_type').on('blur', function() {
+        if (!$('#invoice_number').val()) {
+            const serviceType = $(this).val();
+            if (serviceType) {
+                const prefix = serviceType.replace(/\s+/g, '').toUpperCase().substring(0, 3);
+                const timestamp = Date.now().toString().slice(-6);
+                $('#invoice_number').val(prefix + '-' + timestamp);
+            }
+        }
+    });
+</script>
+{% endblock %}

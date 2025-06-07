@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}Payroll Management - Audit Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="fas fa-money-check-alt me-2"></i>Payroll Management
+        </h1>
+        <div class="btn-group">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPayrollModal">
+                <i class="fas fa-plus me-2"></i>New Payroll Entry
+            </button>
+            <button class="btn btn-outline-secondary" onclick="generatePayslips()">
+                <i class="fas fa-file-pdf me-2"></i>Generate Payslips
+            </button>
+        </div>
+    </div>
+    
+    <!-- Payroll Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">₹{{ "{:,.2f}".format(total_payroll or 0) }}</div>
+                            <div class="small">Total Payroll</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-rupee-sign fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ active_employees or 0 }}</div>
+                            <div class="small">Active Employees</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">₹{{ "{:,.2f}".format(total_deductions or 0) }}</div>
+                            <div class="small">Total Deductions</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-minus-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">₹{{ "{:,.2f}".format(net_payroll or 0) }}</div>
+                            <div class="small">Net Payroll</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hand-holding-usd fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payroll Entries Table -->
+    {% if payroll and payroll.items %}
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>Payroll Entries
+                    </h5>
+                    <div class="btn-group btn-group-sm">
+                        <select class="form-select form-select-sm" id="monthFilter">
+                            <option value="">All Months</option>
+                            <option value="01-2024">January 2024</option>
+                            <option value="02-2024">February 2024</option>
+                            <option value="03-2024">March 2024</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="payrollTable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Month/Year</th>
+                                <th>Basic Salary</th>
+                                <th>Allowances</th>
+                                <th>Gross Salary</th>
+                                <th>Deductions</th>
+                                <th>Net Salary</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in payroll.items %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ entry.employee.name }}</strong>
+                                        <br><small class="text-muted">{{ entry.employee.employee_id or 'N/A' }}</small>
+                                    </td>
+                                    <td>{{ entry.month_year }}</td>
+                                    <td>₹{{ "{:,.2f}".format(entry.basic_salary or 0) }}</td>
+                                    <td>₹{{ "{:,.2f}".format(entry.allowances or 0) }}</td>
+                                    <td>₹{{ "{:,.2f}".format((entry.basic_salary or 0) + (entry.allowances or 0)) }}</td>
+                                    <td>
+                                        ₹{{ "{:,.2f}".format((entry.deductions or 0) + (entry.pf_deduction or 0) + (entry.tds_deduction or 0)) }}
+                                        <br><small class="text-muted">
+                                            PF: ₹{{ "{:,.0f}".format(entry.pf_deduction or 0) }}, 
+                                            TDS: ₹{{ "{:,.0f}".format(entry.tds_deduction or 0) }}
+                                        </small>
+                                    </td>
+                                    <td class="fw-bold">₹{{ "{:,.2f}".format(entry.net_salary or 0) }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Edit" 
+                                                    onclick="editPayroll({{ entry.id }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info" title="View Payslip" 
+                                                    onclick="viewPayslip({{ entry.id }})">
+                                                <i class="fas fa-file-alt"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" title="Download PDF" 
+                                                    onclick="downloadPayslip({{ entry.id }})">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if payroll.pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if payroll.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.payroll', page=payroll.prev_num) }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in payroll.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != payroll.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('main.payroll', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if payroll.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.payroll', page=payroll.next_num) }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-money-check-alt fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No payroll entries found</h4>
+                <p class="text-muted">Start by creating your first payroll entry.</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPayrollModal">
+                    <i class="fas fa-plus me-2"></i>Create First Payroll Entry
+                </button>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- New Payroll Entry Modal -->
+<div class="modal fade" id="newPayrollModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Payroll Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('main.new_payroll_entry') }}">
+                {% if form %}
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.employee_id.label(class="form-label") }}
+                                {{ form.employee_id(class="form-select") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.month_year.label(class="form-label") }}
+                                {{ form.month_year(class="form-control", placeholder="03-2024") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.basic_salary.label(class="form-label") }}
+                                {{ form.basic_salary(class="form-control", step="0.01", id="basicSalary") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.allowances.label(class="form-label") }}
+                                {{ form.allowances(class="form-control", step="0.01", id="allowances") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                {{ form.deductions.label(class="form-label") }}
+                                {{ form.deductions(class="form-control", step="0.01", id="deductions") }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.pf_deduction.label(class="form-label") }}
+                                {{ form.pf_deduction(class="form-control", step="0.01", id="pfDeduction") }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.tds_deduction.label(class="form-label") }}
+                                {{ form.tds_deduction(class="form-control", step="0.01", id="tdsDeduction") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Net Salary</label>
+                                <input type="text" class="form-control fw-bold" id="netSalary" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Auto-calculation:</strong> Net Salary = Basic Salary + Allowances - Deductions - PF - TDS
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Payroll Entry</button>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#payrollTable').DataTable({
+            "paging": false,
+            "info": false,
+            "searching": true,
+            "ordering": true,
+            "columnDefs": [
+                { "orderable": false, "targets": -1 }
+            ]
+        });
+        
+        // Auto-calculate net salary
+        $('#basicSalary, #allowances, #deductions, #pfDeduction, #tdsDeduction').on('input', calculateNetSalary);
+        
+        // Month filter
+        $('#monthFilter').on('change', function() {
+            const month = $(this).val();
+            // Implement filtering logic
+            console.log('Filtering by month:', month);
+        });
+    });
+    
+    function calculateNetSalary() {
+        const basic = parseFloat($('#basicSalary').val()) || 0;
+        const allowances = parseFloat($('#allowances').val()) || 0;
+        const deductions = parseFloat($('#deductions').val()) || 0;
+        const pf = parseFloat($('#pfDeduction').val()) || 0;
+        const tds = parseFloat($('#tdsDeduction').val()) || 0;
+        
+        const netSalary = basic + allowances - deductions - pf - tds;
+        $('#netSalary').val('₹' + netSalary.toLocaleString('en-IN', {minimumFractionDigits: 2}));
+    }
+    
+    function editPayroll(id) {
+        alert('Edit functionality to be implemented for Payroll ID: ' + id);
+    }
+    
+    function viewPayslip(id) {
+        alert('View payslip functionality to be implemented for Payroll ID: ' + id);
+    }
+    
+    function downloadPayslip(id) {
+        alert('Download payslip functionality to be implemented for Payroll ID: ' + id);
+    }
+    
+    function generatePayslips() {
+        alert('Bulk payslip generation functionality to be implemented');
+    }
+    
+    // Auto-populate basic salary when employee is selected
+    $('#employee_id').on('change', function() {
+        const employeeId = $(this).val();
+        if (employeeId) {
+            // Fetch employee salary and auto-populate
+            fetch(`/api/employees/${employeeId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.salary) {
+                        $('#basicSalary').val(data.salary);
+                        calculateNetSalary();
+                    }
+                })
+                .catch(error => console.log('Could not fetch employee salary'));
+        }
+    });
+</script>
+{% endblock %}

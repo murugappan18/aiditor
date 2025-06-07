@@ -1,0 +1,564 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Audit Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="fas fa-users-cog me-2"></i>User Management
+        </h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newUserModal">
+            <i class="fas fa-user-plus me-2"></i>Add New User
+        </button>
+    </div>
+    
+    <!-- User Statistics -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ total_users or 0 }}</div>
+                            <div class="small">Total Users</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ active_users or 0 }}</div>
+                            <div class="small">Active Users</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ admin_users or 0 }}</div>
+                            <div class="small">Admin Users</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-shield fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ recent_logins or 0 }}</div>
+                            <div class="small">Recent Logins (24h)</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-sign-in-alt fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Users Table -->
+    {% if users and users.items %}
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>User Directory
+                    </h5>
+                    <div class="btn-group btn-group-sm">
+                        <select class="form-select form-select-sm" id="roleFilter">
+                            <option value="">All Roles</option>
+                            <option value="admin">Admin</option>
+                            <option value="user">User</option>
+                        </select>
+                        <select class="form-select form-select-sm" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Last Login</th>
+                                <th>Created Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users.items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-{{ 'primary' if user.role.name == 'admin' else 'secondary' }} rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                 style="width: 40px; height: 40px;">
+                                                <span class="text-white fw-bold">{{ user.username[:2].upper() }}</span>
+                                            </div>
+                                            <div>
+                                                <strong>{{ user.username }}</strong>
+                                                <br><small class="text-muted">{{ user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <code>{{ user.username }}</code>
+                                        {% if user.id == current_user.id %}
+                                            <span class="badge bg-info ms-1">You</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'primary' if user.role.name == 'admin' else 'secondary' }}">
+                                            {{ user.role.name.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if user.last_login %}
+                                            {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
+                                            <br><small class="text-muted">
+                                                {% set time_diff = (moment.utcnow() - user.last_login).days if user.last_login else None %}
+                                                {% if time_diff == 0 %}
+                                                    Today
+                                                {% elif time_diff == 1 %}
+                                                    Yesterday
+                                                {% elif time_diff %}
+                                                    {{ time_diff }} days ago
+                                                {% endif %}
+                                            </small>
+                                        {% else %}
+                                            <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if user.is_active else 'secondary' }}">
+                                            {{ 'Active' if user.is_active else 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Edit" 
+                                                    onclick="editUser({{ user.id }})"
+                                                    {% if user.id == current_user.id %}disabled{% endif %}>
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info" title="View Details" 
+                                                    data-bs-toggle="modal" data-bs-target="#userModal{{ user.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {% if user.id != current_user.id %}
+                                                <button class="btn btn-outline-warning" title="Reset Password" 
+                                                        onclick="resetPassword({{ user.id }})">
+                                                    <i class="fas fa-key"></i>
+                                                </button>
+                                                <button class="btn btn-outline-{{ 'secondary' if user.is_active else 'success' }}" 
+                                                        title="{{ 'Deactivate' if user.is_active else 'Activate' }}" 
+                                                        onclick="toggleUserStatus({{ user.id }}, {{ 'false' if user.is_active else 'true' }})">
+                                                    <i class="fas fa-{{ 'user-slash' if user.is_active else 'user-check' }}"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if users.pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if users.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.users', page=users.prev_num) }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in users.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != users.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('main.users', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if users.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.users', page=users.next_num) }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-users-cog fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No users found</h4>
+                <p class="text-muted">Start by adding your first user.</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                    <i class="fas fa-user-plus me-2"></i>Add First User
+                </button>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- User Activity Log -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent User Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ current_user.username }}</strong> logged in
+                                <br><small class="text-muted">{{ moment.utcnow().strftime('%d/%m/%Y %H:%M') }}</small>
+                            </div>
+                            <span class="badge bg-success">Login</span>
+                        </div>
+                        <!-- Additional activity items would be populated from database -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New User Modal -->
+<div class="modal fade" id="newUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('main.new_user') }}">
+                {% if form %}
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.username.label(class="form-label") }}
+                                {{ form.username(class="form-control") }}
+                                <div class="form-text">Username must be unique</div>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.email.label(class="form-label") }}
+                                {{ form.email(class="form-control") }}
+                                <div class="form-text">Email must be unique</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.password.label(class="form-label") }}
+                                {{ form.password(class="form-control", type="password") }}
+                                <div class="form-text">Minimum 6 characters</div>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.role_id.label(class="form-label") }}
+                                {{ form.role_id(class="form-select") }}
+                                <div class="form-text">Select user role and permissions</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active(class="form-check-input") }}
+                                {{ form.is_active.label(class="form-check-label") }}
+                                <div class="form-text">Active users can log in to the system</div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Role Permissions:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Admin:</strong> Full system access including user management</li>
+                                <li><strong>User:</strong> Standard access to clients, taxes, and reports</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create User</button>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- User Detail Modals -->
+{% if users and users.items %}
+    {% for user in users.items %}
+        <div class="modal fade" id="userModal{{ user.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ user.username }} - User Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Account Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Username:</strong></td>
+                                        <td>{{ user.username }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>{{ user.email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Role:</strong></td>
+                                        <td>
+                                            <span class="badge bg-{{ 'primary' if user.role.name == 'admin' else 'secondary' }}">
+                                                {{ user.role.name.title() }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if user.is_active else 'secondary' }}">
+                                                {{ 'Active' if user.is_active else 'Inactive' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Activity Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Created:</strong></td>
+                                        <td>{{ user.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Last Login:</strong></td>
+                                        <td>
+                                            {% if user.last_login %}
+                                                {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
+                                            {% else %}
+                                                <span class="text-muted">Never</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Role Description:</strong></td>
+                                        <td>{{ user.role.description or '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6>Permissions</h6>
+                                <div class="row">
+                                    {% if user.role.name == 'admin' %}
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-check text-success me-2"></i>User Management</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Client Management</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Tax Returns</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Employee Management</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-check text-success me-2"></i>Payroll Management</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Document Management</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Reports & Analytics</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>System Settings</li>
+                                            </ul>
+                                        </div>
+                                    {% else %}
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-times text-danger me-2"></i>User Management</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Client Management</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Tax Returns</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Document Upload</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-check text-success me-2"></i>Reports (View Only)</li>
+                                                <li><i class="fas fa-times text-danger me-2"></i>Employee Management</li>
+                                                <li><i class="fas fa-times text-danger me-2"></i>Payroll Management</li>
+                                                <li><i class="fas fa-times text-danger me-2"></i>System Settings</li>
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        {% if user.id != current_user.id %}
+                            <button type="button" class="btn btn-outline-primary" onclick="editUser({{ user.id }})">Edit User</button>
+                        {% endif %}
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#usersTable').DataTable({
+            "paging": false,
+            "info": false,
+            "searching": true,
+            "ordering": true,
+            "columnDefs": [
+                { "orderable": false, "targets": -1 }
+            ]
+        });
+        
+        // Role and status filters
+        $('#roleFilter, #statusFilter').on('change', function() {
+            // Implement filtering logic
+            console.log('Filtering users');
+        });
+    });
+    
+    function editUser(id) {
+        alert('Edit functionality to be implemented for User ID: ' + id);
+    }
+    
+    function resetPassword(id) {
+        if (confirm('Reset password for this user? A new temporary password will be generated.')) {
+            fetch(`/api/users/${id}/reset-password`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Password reset successfully. New password: ' + data.new_password);
+                } else {
+                    alert('Error resetting password');
+                }
+            })
+            .catch(error => {
+                alert('Error resetting password');
+            });
+        }
+    }
+    
+    function toggleUserStatus(id, activate) {
+        const action = activate ? 'activate' : 'deactivate';
+        if (confirm(`Are you sure you want to ${action} this user?`)) {
+            fetch(`/api/users/${id}/toggle-status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_active: activate })
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error updating user status');
+                }
+            })
+            .catch(error => {
+                alert('Error updating user status');
+            });
+        }
+    }
+    
+    // Username validation
+    $('#username').on('blur', function() {
+        const username = $(this).val();
+        if (username && username.length >= 3) {
+            fetch(`/api/users/check-username?username=${encodeURIComponent(username)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.available) {
+                        $(this).addClass('is-invalid');
+                        $(this).after('<div class="invalid-feedback">Username already exists</div>');
+                    } else {
+                        $(this).removeClass('is-invalid');
+                        $(this).next('.invalid-feedback').remove();
+                    }
+                });
+        }
+    });
+    
+    // Email validation
+    $('#email').on('blur', function() {
+        const email = $(this).val();
+        if (email && email.includes('@')) {
+            fetch(`/api/users/check-email?email=${encodeURIComponent(email)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.available) {
+                        $(this).addClass('is-invalid');
+                        $(this).after('<div class="invalid-feedback">Email already exists</div>');
+                    } else {
+                        $(this).removeClass('is-invalid');
+                        $(this).next('.invalid-feedback').remove();
+                    }
+                });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Audit Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </h1>
+        <div class="text-muted">
+            Welcome back, {{ current_user.username }}!
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ total_clients }}</div>
+                            <div class="small">Total Clients</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('main.clients') }}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ pending_returns }}</div>
+                            <div class="small">Pending ITR</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-invoice fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('main.income_tax_returns') }}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">{{ pending_gst }}</div>
+                            <div class="small">Pending GST</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-percentage fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('main.gst_returns') }}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h4 mb-0">₹{{ "%.2f"|format(outstanding_fees) }}</div>
+                            <div class="small">Outstanding Fees</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-rupee-sign fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('main.outstanding_reports') }}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activities and Reminders -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-users me-2"></i>Recent Clients
+                </div>
+                <div class="card-body">
+                    {% if recent_clients %}
+                        <div class="list-group list-group-flush">
+                            {% for client in recent_clients %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ client.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if client.pan %}PAN: {{ client.pan }}{% endif %}
+                                            {% if client.gstin %}| GSTIN: {{ client.gstin }}{% endif %}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-secondary">{{ client.client_type }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('main.clients') }}" class="btn btn-outline-primary">View All Clients</a>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+                            <p>No clients found</p>
+                            <a href="{{ url_for('main.new_client') }}" class="btn btn-primary">Add First Client</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bell me-2"></i>Upcoming Reminders
+                </div>
+                <div class="card-body">
+                    {% if upcoming_reminders %}
+                        <div class="list-group list-group-flush">
+                            {% for reminder in upcoming_reminders %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ reminder.title }}</h6>
+                                        <small class="text-muted">{{ reminder.reminder_date.strftime('%d/%m/%Y') }}</small>
+                                    </div>
+                                    {% if reminder.description %}
+                                        <p class="mb-1">{{ reminder.description }}</p>
+                                    {% endif %}
+                                    <small class="text-muted">Type: {{ reminder.reminder_type }}</small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-bell fa-3x mb-3 opacity-50"></i>
+                            <p>No upcoming reminders</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.new_client') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-user-plus mb-2"></i>
+                                <br>Add Client
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.new_income_tax_return') }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-file-invoice mb-2"></i>
+                                <br>New ITR
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.new_gst_return') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-percentage mb-2"></i>
+                                <br>New GST Return
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.new_document') }}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-upload mb-2"></i>
+                                <br>Upload Document
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-refresh dashboard stats every 5 minutes
+    setInterval(function() {
+        fetch('/api/dashboard/stats')
+            .then(response => response.json())
+            .then(data => {
+                // Update stats cards if needed
+                console.log('Dashboard stats updated:', data);
+            })
+            .catch(error => console.error('Error updating stats:', error));
+    }, 300000); // 5 minutes
+</script>
+{% endblock %}

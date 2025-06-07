@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Reports - Audit Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="fas fa-search-dollar me-2"></i>Audit Reports & Management
+        </h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newAuditModal">
+            <i class="fas fa-plus me-2"></i>New Audit Report
+        </button>
+    </div>
+    
+    <!-- Audit Types Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-balance-scale fa-3x text-primary mb-3"></i>
+                    <h5>Statutory Audit</h5>
+                    <p class="text-muted">Annual audit of financial statements as per Companies Act</p>
+                    <button class="btn btn-outline-primary" onclick="createAudit('Statutory')">Create Report</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calculator fa-3x text-success mb-3"></i>
+                    <h5>Tax Audit</h5>
+                    <p class="text-muted">Audit under Section 44AB of Income Tax Act</p>
+                    <button class="btn btn-outline-success" onclick="createAudit('Tax')">Create Report</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-3x text-info mb-3"></i>
+                    <h5>Internal Audit</h5>
+                    <p class="text-muted">Internal control and process audit</p>
+                    <button class="btn btn-outline-info" onclick="createAudit('Internal')">Create Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audit Reports Table -->
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Audit Reports
+                </h5>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" onclick="filterReports('all')">All</button>
+                    <button class="btn btn-outline-secondary" onclick="filterReports('draft')">Draft</button>
+                    <button class="btn btn-outline-secondary" onclick="filterReports('final')">Final</button>
+                    <button class="btn btn-outline-secondary" onclick="filterReports('submitted')">Submitted</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped" id="auditTable">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Report Type</th>
+                            <th>Financial Year</th>
+                            <th>Report Date</th>
+                            <th>Status</th>
+                            <th>Findings</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Sample data structure -->
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-search-dollar fa-2x mb-2"></i>
+                                <p>No audit reports found. Start by creating your first audit report.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audit Progress Dashboard -->
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Audit Progress Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="auditProgressChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Key Findings Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>High Priority Issues</span>
+                            <span class="badge bg-danger">3</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Medium Priority Issues</span>
+                            <span class="badge bg-warning">7</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Low Priority Issues</span>
+                            <span class="badge bg-info">12</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Resolved Issues</span>
+                            <span class="badge bg-success">45</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <button class="btn btn-outline-primary btn-sm">View Detailed Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Audit Report Modal -->
+<div class="modal fade" id="newAuditModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Audit Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Client</label>
+                            <select class="form-select" required>
+                                <option value="">Select Client</option>
+                                <!-- Populate with clients -->
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Report Type</label>
+                            <select class="form-select" id="reportType" required>
+                                <option value="">Select Report Type</option>
+                                <option value="Statutory Audit">Statutory Audit</option>
+                                <option value="Tax Audit">Tax Audit</option>
+                                <option value="Internal Audit">Internal Audit</option>
+                                <option value="GST Audit">GST Audit</option>
+                                <option value="Bank Audit">Bank Audit</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Financial Year</label>
+                            <input type="text" class="form-control" placeholder="2023-24" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Report Date</label>
+                            <input type="date" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Status</label>
+                            <select class="form-select">
+                                <option value="Draft">Draft</option>
+                                <option value="In Review">In Review</option>
+                                <option value="Final">Final</option>
+                                <option value="Submitted">Submitted</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Key Findings</label>
+                        <textarea class="form-control" rows="4" placeholder="Describe the key audit findings..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Recommendations</label>
+                        <textarea class="form-control" rows="4" placeholder="Provide audit recommendations..."></textarea>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Audit Period From</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Audit Period To</label>
+                            <input type="date" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Management Response</label>
+                        <textarea class="form-control" rows="3" placeholder="Management response to audit findings..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-outline-primary">Save as Draft</button>
+                    <button type="submit" class="btn btn-primary">Create Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#auditTable').DataTable({
+            "paging": true,
+            "info": true,
+            "searching": true,
+            "ordering": true,
+            "pageLength": 10
+        });
+        
+        // Initialize audit progress chart
+        initAuditProgressChart();
+    });
+    
+    function createAudit(type) {
+        $('#newAuditModal').modal('show');
+        $('#reportType').val(type + ' Audit');
+    }
+    
+    function filterReports(status) {
+        // Implement filtering logic
+        console.log('Filtering reports by status:', status);
+    }
+    
+    function initAuditProgressChart() {
+        const ctx = document.getElementById('auditProgressChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'In Progress', 'Pending', 'Overdue'],
+                datasets: [{
+                    data: [12, 5, 8, 2],
+                    backgroundColor: [
+                        'var(--bs-success)',
+                        'var(--bs-info)',
+                        'var(--bs-warning)',
+                        'var(--bs-danger)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'var(--bs-body-color)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

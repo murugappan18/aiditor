@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Audit Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user me-2"></i>{{ title }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.client_type.label(class="form-label") }}
+                                {{ form.client_type(class="form-select" + (" is-invalid" if form.client_type.errors else "")) }}
+                                {% if form.client_type.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.client_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.pan.label(class="form-label") }}
+                                {{ form.pan(class="form-control" + (" is-invalid" if form.pan.errors else ""), placeholder="ABCDE1234F") }}
+                                {% if form.pan.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.pan.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.gstin.label(class="form-label") }}
+                                {{ form.gstin(class="form-control" + (" is-invalid" if form.gstin.errors else ""), placeholder="22ABCDE1234F1Z5") }}
+                                {% if form.gstin.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.gstin.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.email.label(class="form-label") }}
+                                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.phone.label(class="form-label") }}
+                                {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                                {% if form.phone.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.address.label(class="form-label") }}
+                            {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows="3") }}
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.address.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.date_of_birth.label(class="form-label") }}
+                                {{ form.date_of_birth(class="form-control" + (" is-invalid" if form.date_of_birth.errors else "")) }}
+                                {% if form.date_of_birth.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.date_of_birth.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">For individuals only</div>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.incorporation_date.label(class="form-label") }}
+                                {{ form.incorporation_date(class="form-control" + (" is-invalid" if form.incorporation_date.errors else "")) }}
+                                {% if form.incorporation_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.incorporation_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">For companies/entities only</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                            {% if form.status.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.status.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.clients') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Clients
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Client
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-format PAN input
+    $('#pan').on('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+    
+    // Auto-format GSTIN input
+    $('#gstin').on('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+    
+    // Show/hide date fields based on client type
+    $('#client_type').on('change', function() {
+        const clientType = $(this).val();
+        const $dobField = $('#date_of_birth').closest('.col-md-6');
+        const $incorpField = $('#incorporation_date').closest('.col-md-6');
+        
+        if (clientType === 'Individual') {
+            $dobField.show();
+            $incorpField.hide();
+        } else {
+            $dobField.hide();
+            $incorpField.show();
+        }
+    });
+    
+    // Trigger on page load
+    $('#client_type').trigger('change');
+</script>
+{% endblock %}

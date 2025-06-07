@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Clients - Audit Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="fas fa-users me-2"></i>Client Management
+        </h1>
+        <a href="{{ url_for('main.new_client') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New Client
+        </a>
+    </div>
+    
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" class="form-control" name="search" value="{{ search }}" 
+                           placeholder="Search by name, PAN, or GSTIN...">
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                        <a href="{{ url_for('main.clients') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Clients Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if clients %}
+                <div class="table-responsive">
+                    <table class="table table-striped" id="clientsTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>PAN</th>
+                                <th>GSTIN</th>
+                                <th>Contact</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for client in clients %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ client.name }}</strong>
+                                        {% if client.email %}
+                                            <br><small class="text-muted">{{ client.email }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.pan %}
+                                            <code>{{ client.pan }}</code>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.gstin %}
+                                            <code>{{ client.gstin }}</code>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if client.phone %}
+                                            <i class="fas fa-phone me-1"></i>{{ client.phone }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ client.client_type }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if client.status == 'Active' else 'secondary' }}">
+                                            {{ client.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ client.created_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('main.edit_client', id=client.id) }}" 
+                                               class="btn btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-outline-info" title="View Details" 
+                                                    data-bs-toggle="modal" data-bs-target="#clientModal{{ client.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if pagination.pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if pagination.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.clients', page=pagination.prev_num, search=search) }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != pagination.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('main.clients', page=page_num, search=search) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if pagination.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.clients', page=pagination.next_num, search=search) }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No clients found</h4>
+                    <p class="text-muted">
+                        {% if search %}
+                            No clients match your search criteria.
+                        {% else %}
+                            Start by adding your first client.
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('main.new_client') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add New Client
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Client Detail Modals -->
+{% for client in clients %}
+    <div class="modal fade" id="clientModal{{ client.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ client.name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Basic Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>{{ client.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Type:</strong></td>
+                                    <td>{{ client.client_type }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>PAN:</strong></td>
+                                    <td>{{ client.pan or '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>GSTIN:</strong></td>
+                                    <td>{{ client.gstin or '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if client.status == 'Active' else 'secondary' }}">
+                                            {{ client.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Contact Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>{{ client.email or '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ client.phone or '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Address:</strong></td>
+                                    <td>{{ client.address or '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>DOB:</strong></td>
+                                    <td>{{ client.date_of_birth.strftime('%d/%m/%Y') if client.date_of_birth else '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Created:</strong></td>
+                                    <td>{{ client.created_at.strftime('%d/%m/%Y') }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="{{ url_for('main.edit_client', id=client.id) }}" class="btn btn-primary">Edit Client</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#clientsTable').DataTable({
+            "paging": false,
+            "info": false,
+            "searching": false,
+            "ordering": true,
+            "columnDefs": [
+                { "orderable": false, "targets": -1 }
+            ]
+        });
+    });
+</script>
+{% endblock %}
