@@ -5,7 +5,7 @@ from models import *
 from forms import *
 from utils import allowed_file, save_uploaded_file
 import os
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from sqlalchemy import func, or_
 
 main_bp = Blueprint('main', __name__)
@@ -439,6 +439,128 @@ def api_search_clients():
         'gstin': c.gstin
     } for c in clients])
 
+# CRM Routes
+@main_bp.route('/reminders')
+@login_required
+def reminders():
+    search = request.args.get('search', '')
+    page = request.args.get('page', 1, type=int)
+    
+    query = Reminder.query
+    if search:
+        query = query.filter(or_(
+            Reminder.title.contains(search),
+            Reminder.description.contains(search)
+        ))
+    
+    reminders = query.order_by(Reminder.reminder_date.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    # Get overdue reminders
+    overdue_reminders = Reminder.query.filter(
+        Reminder.reminder_date < datetime.now(),
+        Reminder.status == 'Active'
+    ).count()
+    
+    return render_template('crm/reminders.html', 
+                         reminders=reminders, 
+                         overdue_count=overdue_reminders,
+                         search=search)
+
+@main_bp.route('/reminders/new', methods=['GET', 'POST'])
+@login_required
+def new_reminder():
+    form = ReminderForm()
+    form.client_id.choices = [(0, 'Select Client')] + [(c.id, c.name) for c in Client.query.all()]
+    
+    if form.validate_on_submit():
+        reminder = Reminder(
+            client_id=form.client_id.data if form.client_id.data else None,
+            title=form.title.data,
+            description=form.description.data,
+            reminder_date=datetime.combine(form.reminder_date.data, datetime.min.time()),
+            reminder_type=form.reminder_type.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(reminder)
+        db.session.commit()
+        flash('Reminder created successfully!', 'success')
+        return redirect(url_for('main.reminders'))
+    
+    return render_template('crm/reminder_form.html', form=form, title='New Reminder')
+
+@main_bp.route('/reminders/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_reminder(id):
+    reminder = Reminder.query.get_or_404(id)
+    form = ReminderForm(obj=reminder)
+    form.client_id.choices = [(0, 'Select Client')] + [(c.id, c.name) for c in Client.query.all()]
+    
+    if form.validate_on_submit():
+        reminder.client_id = form.client_id.data if form.client_id.data else None
+        reminder.title = form.title.data
+        reminder.description = form.description.data
+        reminder.reminder_date = datetime.combine(form.reminder_date.data, datetime.min.time())
+        reminder.reminder_type = form.reminder_type.data
+        
+        db.session.commit()
+        flash('Reminder updated successfully!', 'success')
+        return redirect(url_for('main.reminders'))
+    
+    return render_template('crm/reminder_form.html', form=form, reminder=reminder, title='Edit Reminder')
+
+@main_bp.route('/reminders/<int:id>/complete')
+@login_required
+def complete_reminder(id):
+    reminder = Reminder.query.get_or_404(id)
+    reminder.status = 'Completed'
+    db.session.commit()
+    flash('Reminder marked as completed!', 'success')
+    return redirect(url_for('main.reminders'))
+
+@main_bp.route('/communications')
+@login_required
+def communications():
+    return render_template('crm/communications.html')
+
+@main_bp.route('/follow_ups')
+@login_required
+def follow_ups():
+    # Get pending follow-ups based on reminders
+    pending_followups = Reminder.query.filter(
+        Reminder.reminder_type == 'Follow-up',
+        Reminder.status == 'Active',
+        Reminder.reminder_date <= datetime.now() + timedelta(days=7)
+    ).order_by(Reminder.reminder_date).all()
+    
+    return render_template('crm/follow_ups.html', follow_ups=pending_followups)
+
+# ERP Routes
+@main_bp.route('/inventory')
+@login_required
+def inventory():
+    return render_template('erp/inventory.html')
+
+@main_bp.route('/analytics')
+@login_required
+def analytics():
+    # Get analytics data
+    monthly_revenue = db.session.query(
+        func.date_trunc('month', OutstandingFee.created_at).label('month'),
+        func.sum(OutstandingFee.amount).label('total')
+    ).filter(OutstandingFee.status == 'Paid').group_by('month').all()
+    
+    client_stats = db.session.query(
+        Client.client_type,
+        func.count(Client.id).label('count')
+    ).group_by(Client.client_type).all()
+    
+    return render_template('reports/analytics.html', 
+                         monthly_revenue=monthly_revenue,
+                         client_stats=client_stats)
+
 @main_bp.route('/api/dashboard/stats')
 @login_required
 def api_dashboard_stats():
@@ -450,3 +572,20 @@ def api_dashboard_stats():
         'total_outstanding': db.session.query(func.sum(OutstandingFee.amount)).filter_by(status='Pending').scalar() or 0
     }
     return jsonify(stats)
+
+@main_bp.route('/api/reminders/upcoming')
+@login_required
+def api_upcoming_reminders():
+    reminders = Reminder.query.filter(
+        Reminder.reminder_date >= datetime.now(),
+        Reminder.reminder_date <= datetime.now() + timedelta(days=7),
+        Reminder.status == 'Active'
+    ).order_by(Reminder.reminder_date).all()
+    
+    return jsonify([{
+        'id': r.id,
+        'title': r.title,
+        'client_name': r.client.name if r.client else 'General',
+        'reminder_date': r.reminder_date.strftime('%Y-%m-%d'),
+        'reminder_type': r.reminder_type
+    } for r in reminders])

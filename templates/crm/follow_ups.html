@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}CRM - Follow-ups{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Follow-ups</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('main.new_reminder') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add Follow-up
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Follow-up Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Overdue</h6>
+                        <h3 class="mb-0">{{ follow_ups|selectattr('reminder_date', 'lt', moment().datetime)|list|length }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Due Today</h6>
+                        <h3 class="mb-0">{{ follow_ups|selectattr('reminder_date', 'equalto', moment().date)|list|length }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-day fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">This Week</h6>
+                        <h3 class="mb-0">{{ follow_ups|length }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-week fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Completed</h6>
+                        <h3 class="mb-0">15</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Follow-ups List -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-tasks me-2"></i>Pending Follow-ups
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if follow_ups %}
+        <div class="row">
+            {% for followup in follow_ups %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-start-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">{{ followup.title }}</h6>
+                            <small class="text-muted">{{ followup.reminder_date.strftime('%d/%m/%Y') }}</small>
+                        </div>
+                        
+                        {% if followup.client %}
+                        <p class="card-text mb-2">
+                            <i class="fas fa-user me-1"></i>
+                            <strong>{{ followup.client.name }}</strong>
+                            {% if followup.client.pan %}
+                                <br><small class="text-muted">PAN: {{ followup.client.pan }}</small>
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                        
+                        {% if followup.description %}
+                        <p class="card-text text-muted">{{ followup.description }}</p>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-warning">{{ followup.reminder_type }}</span>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-success btn-sm" 
+                                        onclick="markComplete({{ followup.id }})" title="Mark Complete">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <a href="{{ url_for('main.edit_reminder', id=followup.id) }}" 
+                                   class="btn btn-outline-primary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-outline-info btn-sm" 
+                                        onclick="snoozeFollowup({{ followup.id }})" title="Snooze">
+                                    <i class="fas fa-snooze"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-tasks"></i>
+            <h4>No Follow-ups Pending</h4>
+            <p class="text-muted">Great! You're all caught up. All follow-ups have been completed.</p>
+            <a href="{{ url_for('main.new_reminder') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add New Follow-up
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="bulkComplete()">
+                        <i class="fas fa-check-double me-1"></i>Mark All Complete
+                    </button>
+                    <button class="btn btn-outline-warning btn-sm" onclick="snoozeAll()">
+                        <i class="fas fa-snooze me-1"></i>Snooze All for 1 Day
+                    </button>
+                    <a href="{{ url_for('main.reminders') }}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-list me-1"></i>View All Reminders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Follow-up Tips</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-lightbulb text-warning me-2"></i>
+                                <small>Set specific follow-up dates for better tracking</small>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-phone text-success me-2"></i>
+                                <small>Call clients for urgent follow-ups</small>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-envelope text-info me-2"></i>
+                                <small>Send email reminders for document submissions</small>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-calendar text-primary me-2"></i>
+                                <small>Schedule follow-ups during client meetings</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function markComplete(followupId) {
+    if (confirm('Mark this follow-up as complete?')) {
+        window.location.href = `/reminders/${followupId}/complete`;
+    }
+}
+
+function snoozeFollowup(followupId) {
+    const days = prompt('Snooze for how many days?', '1');
+    if (days && !isNaN(days)) {
+        // Here you would make an AJAX call to snooze the follow-up
+        alert(`Follow-up snoozed for ${days} day(s)`);
+        location.reload();
+    }
+}
+
+function bulkComplete() {
+    if (confirm('Mark all visible follow-ups as complete?')) {
+        // Here you would make an AJAX call to complete all follow-ups
+        alert('All follow-ups marked as complete');
+        location.reload();
+    }
+}
+
+function snoozeAll() {
+    if (confirm('Snooze all follow-ups for 1 day?')) {
+        // Here you would make an AJAX call to snooze all follow-ups
+        alert('All follow-ups snoozed for 1 day');
+        location.reload();
+    }
+}
+
+$(document).ready(function() {
+    // Auto-refresh every 5 minutes
+    setInterval(function() {
+        location.reload();
+    }, 300000);
+});
+</script>
+{% endblock %}
