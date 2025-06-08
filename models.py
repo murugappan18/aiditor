@@ -161,19 +161,7 @@ class OutstandingFee(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
 
-class ChallanPayment(db.Model):
-    __tablename__ = 'challan_payments'
-    
-    id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
-    challan_number = Column(String(50), nullable=False)
-    tax_type = Column(String(50))  # Income Tax, TDS, GST, etc.
-    amount = Column(Float, nullable=False)
-    payment_date = Column(Date)
-    bank_name = Column(String(100))
-    status = Column(String(20), default='Pending')  # Pending, Cleared, Failed
-    created_at = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(Integer, ForeignKey('users.id'))
+
 
 class AuditReport(db.Model):
     __tablename__ = 'audit_reports'
@@ -297,6 +285,125 @@ class XBRLReport(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
 
+class ClientNote(db.Model):
+    __tablename__ = 'client_notes'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    note_type = Column(String(50))  # Audit Observation, Call Log, Meeting, General
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    priority = Column(String(20), default='Normal')  # High, Normal, Low
+    follow_up_date = Column(Date)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class DocumentChecklist(db.Model):
+    __tablename__ = 'document_checklists'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    checklist_name = Column(String(200), nullable=False)
+    service_type = Column(String(100))  # ITR, GST, Audit, ROC
+    documents_required = Column(Text)  # JSON list of documents
+    documents_received = Column(Text)  # JSON list of received documents
+    completion_percentage = Column(Float, default=0)
+    due_date = Column(Date)
+    status = Column(String(20), default='Pending')
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class ReturnTracker(db.Model):
+    __tablename__ = 'return_tracker'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    return_type = Column(String(50), nullable=False)  # ITR, GST, TDS, ROC
+    period = Column(String(20), nullable=False)  # AY 2023-24, Mar 2024, Q1 FY24
+    due_date = Column(Date, nullable=False)
+    filing_date = Column(Date)
+    status = Column(String(20), default='Pending')  # Pending, Filed, Processed, Overdue
+    acknowledgment_number = Column(String(50))
+    remarks = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class GSTValidation(db.Model):
+    __tablename__ = 'gst_validations'
+    
+    id = Column(Integer, primary_key=True)
+    gstin = Column(String(15), nullable=False, unique=True)
+    is_valid = Column(Boolean, default=False)
+    business_name = Column(String(500))
+    trade_name = Column(String(500))
+    registration_date = Column(Date)
+    status = Column(String(50))  # Active, Cancelled, Suspended
+    state_code = Column(String(2))
+    state_name = Column(String(100))
+    taxpayer_type = Column(String(100))
+    constitution = Column(String(100))
+    last_validated = Column(DateTime, default=datetime.utcnow)
+    validation_source = Column(String(50), default='Manual')
+
+class ChallanManagement(db.Model):
+    __tablename__ = 'challan_management'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    challan_number = Column(String(50), nullable=False)
+    challan_type = Column(String(50))  # ITNS 281, GST PMT-06, TDS Payment
+    tax_type = Column(String(50))  # Income Tax, TDS, GST, etc.
+    assessment_year = Column(String(10))
+    amount = Column(Float, nullable=False)
+    payment_date = Column(Date)
+    bank_name = Column(String(100))
+    bank_branch = Column(String(200))
+    bsr_code = Column(String(7))
+    serial_number = Column(String(5))
+    status = Column(String(20), default='Pending')  # Pending, Cleared, Failed, Bounced
+    remarks = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class SMSTemplate(db.Model):
+    __tablename__ = 'sms_templates'
+    
+    id = Column(Integer, primary_key=True)
+    template_name = Column(String(100), nullable=False)
+    template_type = Column(String(50))  # Reminder, Birthday, Payment, General
+    content = Column(Text, nullable=False)
+    variables = Column(String(500))  # JSON list of variables like {client_name}, {due_date}
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class EmailTemplate(db.Model):
+    __tablename__ = 'email_templates'
+    
+    id = Column(Integer, primary_key=True)
+    template_name = Column(String(100), nullable=False)
+    template_type = Column(String(50))  # Reminder, Birthday, Payment, General
+    subject = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    variables = Column(String(500))  # JSON list of variables
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class CommunicationLog(db.Model):
+    __tablename__ = 'communication_logs'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    communication_type = Column(String(20), nullable=False)  # SMS, Email, Call
+    subject = Column(String(200))
+    message = Column(Text)
+    recipient = Column(String(200))  # Phone number or email
+    status = Column(String(20), default='Sent')  # Sent, Failed, Delivered, Read
+    sent_at = Column(DateTime, default=datetime.utcnow)
+    template_used = Column(String(100))
+    created_by = Column(Integer, ForeignKey('users.id'))
+
 class Reminder(db.Model):
     __tablename__ = 'reminders'
     
@@ -305,7 +412,9 @@ class Reminder(db.Model):
     title = Column(String(200), nullable=False)
     description = Column(Text)
     reminder_date = Column(DateTime, nullable=False)
-    reminder_type = Column(String(50))  # Birthday, Due Date, Follow-up
+    reminder_type = Column(String(50))  # Birthday, Due Date, Follow-up, Outstanding Fee
     status = Column(String(20), default='Active')  # Active, Completed, Cancelled
+    auto_created = Column(Boolean, default=False)  # System generated vs manual
+    notification_sent = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))

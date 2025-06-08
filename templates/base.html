@@ -182,11 +182,53 @@
                         </li>
                     </ul>
 
+                    <!-- Smart Features -->
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Smart Features</span>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.gst_validator') }}">
+                                <i class="fas fa-check-circle me-2"></i>GST Validator
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.challan_management') }}">
+                                <i class="fas fa-money-check me-2"></i>Challan Management
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.return_tracker') }}">
+                                <i class="fas fa-clipboard-list me-2"></i>Return Tracker
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.auto_reminders') }}">
+                                <i class="fas fa-robot me-2"></i>Auto Reminders
+                            </a>
+                        </li>
+                    </ul>
+
                     <!-- CRM -->
                     <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                         <span>CRM</span>
                     </h6>
                     <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.client_search') }}">
+                                <i class="fas fa-search me-2"></i>Client Search
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.client_notes') }}">
+                                <i class="fas fa-sticky-note me-2"></i>Client Notes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.document_checklists') }}">
+                                <i class="fas fa-list-check me-2"></i>Document Checklists
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('main.reminders') }}">
                                 <i class="fas fa-bell me-2"></i>Reminders
@@ -194,12 +236,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('main.communications') }}">
-                                <i class="fas fa-envelope me-2"></i>Communications
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.follow_ups') }}">
-                                <i class="fas fa-tasks me-2"></i>Follow-ups
+                                <i class="fas fa-envelope me-2"></i>SMS/Email
                             </a>
                         </li>
                     </ul>
