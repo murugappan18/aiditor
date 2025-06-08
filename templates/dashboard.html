@@ -13,6 +13,16 @@
         </div>
     </div>
     
+    <!-- Urgent Reminders Alert -->
+    {% if upcoming_reminders %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-bell me-2"></i>
+        <strong>Upcoming Reminders:</strong> You have {{ upcoming_reminders|length }} reminder(s) coming up.
+        <a href="{{ url_for('main.reminders') }}" class="alert-link">View all reminders</a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
     <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-3">
