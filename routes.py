@@ -573,6 +573,305 @@ def api_dashboard_stats():
     }
     return jsonify(stats)
 
+# ROC Forms Routes
+@main_bp.route('/roc_forms')
+@login_required
+def roc_forms():
+    search = request.args.get('search', '')
+    page = request.args.get('page', 1, type=int)
+    
+    query = ROCForm.query
+    if search:
+        query = query.join(Client).filter(or_(
+            Client.name.contains(search),
+            ROCForm.form_type.contains(search),
+            ROCForm.acknowledgment_number.contains(search)
+        ))
+    
+    roc_forms = query.order_by(ROCForm.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('compliance/roc_forms.html', roc_forms=roc_forms, search=search)
+
+@main_bp.route('/roc_forms/new', methods=['GET', 'POST'])
+@login_required
+def new_roc_form():
+    form = ROCFormForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+    
+    if form.validate_on_submit():
+        roc_form = ROCForm(
+            client_id=form.client_id.data,
+            form_type=form.form_type.data,
+            financial_year=form.financial_year.data,
+            filing_date=form.filing_date.data,
+            due_date=form.due_date.data,
+            acknowledgment_number=form.acknowledgment_number.data,
+            status=form.status.data,
+            filing_fee=form.filing_fee.data or 0,
+            late_fee=form.late_fee.data or 0,
+            created_by=current_user.id
+        )
+        
+        db.session.add(roc_form)
+        db.session.commit()
+        flash('ROC Form entry created successfully!', 'success')
+        return redirect(url_for('main.roc_forms'))
+    
+    return render_template('compliance/roc_form.html', form=form, title='New ROC Form')
+
+# SFT Returns Routes
+@main_bp.route('/sft_returns')
+@login_required
+def sft_returns():
+    search = request.args.get('search', '')
+    page = request.args.get('page', 1, type=int)
+    
+    query = SFTReturn.query
+    if search:
+        query = query.join(Client).filter(or_(
+            Client.name.contains(search),
+            SFTReturn.acknowledgment_number.contains(search)
+        ))
+    
+    sft_returns = query.order_by(SFTReturn.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('compliance/sft_returns.html', sft_returns=sft_returns, search=search)
+
+@main_bp.route('/sft_returns/new', methods=['GET', 'POST'])
+@login_required
+def new_sft_return():
+    form = SFTReturnForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+    
+    if form.validate_on_submit():
+        sft_return = SFTReturn(
+            client_id=form.client_id.data,
+            financial_year=form.financial_year.data,
+            form_type=form.form_type.data,
+            filing_date=form.filing_date.data,
+            due_date=form.due_date.data,
+            acknowledgment_number=form.acknowledgment_number.data,
+            total_transactions=form.total_transactions.data or 0,
+            total_amount=form.total_amount.data or 0,
+            status=form.status.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(sft_return)
+        db.session.commit()
+        flash('SFT Return created successfully!', 'success')
+        return redirect(url_for('main.sft_returns'))
+    
+    return render_template('compliance/sft_form.html', form=form, title='New SFT Return')
+
+# Balance Sheet & Audit Routes
+@main_bp.route('/balance_sheet_audits')
+@login_required
+def balance_sheet_audits():
+    search = request.args.get('search', '')
+    page = request.args.get('page', 1, type=int)
+    
+    query = BalanceSheetAudit.query
+    if search:
+        query = query.join(Client).filter(or_(
+            Client.name.contains(search),
+            BalanceSheetAudit.auditor_name.contains(search)
+        ))
+    
+    audits = query.order_by(BalanceSheetAudit.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('compliance/balance_sheet_audits.html', audits=audits, search=search)
+
+@main_bp.route('/balance_sheet_audits/new', methods=['GET', 'POST'])
+@login_required
+def new_balance_sheet_audit():
+    form = BalanceSheetAuditForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+    
+    if form.validate_on_submit():
+        audit = BalanceSheetAudit(
+            client_id=form.client_id.data,
+            financial_year=form.financial_year.data,
+            audit_type=form.audit_type.data,
+            balance_sheet_date=form.balance_sheet_date.data,
+            audit_completion_date=form.audit_completion_date.data,
+            auditor_name=form.auditor_name.data,
+            auditor_membership_no=form.auditor_membership_no.data,
+            opinion_type=form.opinion_type.data,
+            key_audit_matters=form.key_audit_matters.data,
+            management_letter_issued=form.management_letter_issued.data,
+            status=form.status.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(audit)
+        db.session.commit()
+        flash('Balance Sheet & Audit entry created successfully!', 'success')
+        return redirect(url_for('main.balance_sheet_audits'))
+    
+    return render_template('compliance/balance_sheet_form.html', form=form, title='New Balance Sheet & Audit')
+
+# CMA Reports Routes
+@main_bp.route('/cma_reports')
+@login_required
+def cma_reports():
+    search = request.args.get('search', '')
+    page = request.args.get('page', 1, type=int)
+    
+    query = CMAReport.query
+    if search:
+        query = query.join(Client).filter(or_(
+            Client.name.contains(search),
+            CMAReport.reporting_period.contains(search)
+        ))
+    
+    cma_reports = query.order_by(CMAReport.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('compliance/cma_reports.html', cma_reports=cma_reports, search=search)
+
+@main_bp.route('/cma_reports/new', methods=['GET', 'POST'])
+@login_required
+def new_cma_report():
+    form = CMAReportForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+    
+    if form.validate_on_submit():
+        cma_report = CMAReport(
+            client_id=form.client_id.data,
+            reporting_period=form.reporting_period.data,
+            report_date=form.report_date.data,
+            working_capital_limit=form.working_capital_limit.data or 0,
+            utilized_amount=form.utilized_amount.data or 0,
+            cash_credit_limit=form.cash_credit_limit.data or 0,
+            overdraft_limit=form.overdraft_limit.data or 0,
+            bill_discounting_limit=form.bill_discounting_limit.data or 0,
+            letter_of_credit=form.letter_of_credit.data or 0,
+            bank_guarantee=form.bank_guarantee.data or 0,
+            inventory_value=form.inventory_value.data or 0,
+            receivables_value=form.receivables_value.data or 0,
+            status=form.status.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(cma_report)
+        db.session.commit()
+        flash('CMA Report created successfully!', 'success')
+        return redirect(url_for('main.cma_reports'))
+    
+    return render_template('compliance/cma_form.html', form=form, title='New CMA Report')
+
+# Assessment Orders Routes
+@main_bp.route('/assessment_orders')
+@login_required
+def assessment_orders():
+    search = request.args.get('search', '')
+    page = request.args.get('page', 1, type=int)
+    
+    query = AssessmentOrder.query
+    if search:
+        query = query.join(Client).filter(or_(
+            Client.name.contains(search),
+            AssessmentOrder.order_number.contains(search)
+        ))
+    
+    orders = query.order_by(AssessmentOrder.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('compliance/assessment_orders.html', orders=orders, search=search)
+
+@main_bp.route('/assessment_orders/new', methods=['GET', 'POST'])
+@login_required
+def new_assessment_order():
+    form = AssessmentOrderForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+    
+    if form.validate_on_submit():
+        order = AssessmentOrder(
+            client_id=form.client_id.data,
+            assessment_year=form.assessment_year.data,
+            order_type=form.order_type.data,
+            order_date=form.order_date.data,
+            order_number=form.order_number.data,
+            total_income_assessed=form.total_income_assessed.data or 0,
+            tax_demanded=form.tax_demanded.data or 0,
+            interest_charged=form.interest_charged.data or 0,
+            penalty_imposed=form.penalty_imposed.data or 0,
+            appeal_filed=form.appeal_filed.data,
+            appeal_date=form.appeal_date.data,
+            appeal_number=form.appeal_number.data,
+            status=form.status.data,
+            remarks=form.remarks.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(order)
+        db.session.commit()
+        flash('Assessment Order created successfully!', 'success')
+        return redirect(url_for('main.assessment_orders'))
+    
+    return render_template('compliance/assessment_form.html', form=form, title='New Assessment Order')
+
+# XBRL Reports Routes
+@main_bp.route('/xbrl_reports')
+@login_required
+def xbrl_reports():
+    search = request.args.get('search', '')
+    page = request.args.get('page', 1, type=int)
+    
+    query = XBRLReport.query
+    if search:
+        query = query.join(Client).filter(or_(
+            Client.name.contains(search),
+            XBRLReport.acknowledgment_number.contains(search)
+        ))
+    
+    xbrl_reports = query.order_by(XBRLReport.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('compliance/xbrl_reports.html', xbrl_reports=xbrl_reports, search=search)
+
+@main_bp.route('/xbrl_reports/new', methods=['GET', 'POST'])
+@login_required
+def new_xbrl_report():
+    form = XBRLReportForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+    
+    if form.validate_on_submit():
+        xbrl_file_path = None
+        if form.xbrl_file.data:
+            xbrl_file_path = save_uploaded_file(form.xbrl_file.data, 'xbrl')
+        
+        xbrl_report = XBRLReport(
+            client_id=form.client_id.data,
+            financial_year=form.financial_year.data,
+            report_type=form.report_type.data,
+            filing_category=form.filing_category.data,
+            xbrl_file_path=xbrl_file_path,
+            validation_status=form.validation_status.data,
+            validation_errors=form.validation_errors.data,
+            filing_date=form.filing_date.data,
+            acknowledgment_number=form.acknowledgment_number.data,
+            status=form.status.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(xbrl_report)
+        db.session.commit()
+        flash('XBRL Report created successfully!', 'success')
+        return redirect(url_for('main.xbrl_reports'))
+    
+    return render_template('compliance/xbrl_form.html', form=form, title='New XBRL Report')
+
 @main_bp.route('/api/reminders/upcoming')
 @login_required
 def api_upcoming_reminders():

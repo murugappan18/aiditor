@@ -173,3 +173,155 @@ class ReminderForm(FlaskForm):
         ('Meeting', 'Meeting'),
         ('Other', 'Other')
     ], validators=[DataRequired()])
+
+class ROCFormForm(FlaskForm):
+    client_id = SelectField('Client', coerce=int, validators=[DataRequired()])
+    form_type = SelectField('Form Type', choices=[
+        ('AOC-4', 'AOC-4 (Financial Statements)'),
+        ('MGT-7', 'MGT-7 (Annual Return)'),
+        ('DIR-3 KYC', 'DIR-3 KYC (Director KYC)'),
+        ('ADT-1', 'ADT-1 (Auditor Appointment)'),
+        ('INC-20A', 'INC-20A (Commencement of Business)'),
+        ('INC-22', 'INC-22 (Notice of Situation)'),
+        ('MGT-14', 'MGT-14 (Board Resolution)')
+    ], validators=[DataRequired()])
+    financial_year = StringField('Financial Year', validators=[DataRequired(), Length(max=10)])
+    filing_date = DateField('Filing Date', validators=[Optional()])
+    due_date = DateField('Due Date', validators=[Optional()])
+    acknowledgment_number = StringField('Acknowledgment Number', validators=[Optional(), Length(max=50)])
+    status = SelectField('Status', choices=[
+        ('Pending', 'Pending'),
+        ('Filed', 'Filed'),
+        ('Approved', 'Approved')
+    ], default='Pending')
+    filing_fee = FloatField('Filing Fee', validators=[Optional(), NumberRange(min=0)])
+    late_fee = FloatField('Late Fee', validators=[Optional(), NumberRange(min=0)])
+
+class SFTReturnForm(FlaskForm):
+    client_id = SelectField('Client', coerce=int, validators=[DataRequired()])
+    financial_year = StringField('Financial Year', validators=[DataRequired(), Length(max=10)])
+    form_type = SelectField('Form Type', choices=[
+        ('SFT-001', 'SFT-001 (Statement of Financial Transaction)'),
+        ('SFT-002', 'SFT-002 (Correction Statement)')
+    ], default='SFT-001')
+    filing_date = DateField('Filing Date', validators=[Optional()])
+    due_date = DateField('Due Date', validators=[Optional()])
+    acknowledgment_number = StringField('Acknowledgment Number', validators=[Optional(), Length(max=50)])
+    total_transactions = IntegerField('Total Transactions', validators=[Optional(), NumberRange(min=0)])
+    total_amount = FloatField('Total Amount', validators=[Optional(), NumberRange(min=0)])
+    status = SelectField('Status', choices=[
+        ('Pending', 'Pending'),
+        ('Filed', 'Filed'),
+        ('Processed', 'Processed')
+    ], default='Pending')
+
+class BalanceSheetAuditForm(FlaskForm):
+    client_id = SelectField('Client', coerce=int, validators=[DataRequired()])
+    financial_year = StringField('Financial Year', validators=[DataRequired(), Length(max=10)])
+    audit_type = SelectField('Audit Type', choices=[
+        ('Statutory', 'Statutory Audit'),
+        ('Tax', 'Tax Audit'),
+        ('Internal', 'Internal Audit'),
+        ('Bank', 'Bank Audit'),
+        ('Government', 'Government Audit')
+    ], validators=[DataRequired()])
+    balance_sheet_date = DateField('Balance Sheet Date', validators=[Optional()])
+    audit_completion_date = DateField('Audit Completion Date', validators=[Optional()])
+    auditor_name = StringField('Auditor Name', validators=[Optional(), Length(max=200)])
+    auditor_membership_no = StringField('Auditor Membership No.', validators=[Optional(), Length(max=20)])
+    opinion_type = SelectField('Opinion Type', choices=[
+        ('Unqualified', 'Unqualified'),
+        ('Qualified', 'Qualified'),
+        ('Adverse', 'Adverse'),
+        ('Disclaimer', 'Disclaimer of Opinion')
+    ], validators=[Optional()])
+    key_audit_matters = TextAreaField('Key Audit Matters', validators=[Optional()])
+    management_letter_issued = BooleanField('Management Letter Issued')
+    status = SelectField('Status', choices=[
+        ('In Progress', 'In Progress'),
+        ('Completed', 'Completed'),
+        ('Submitted', 'Submitted')
+    ], default='In Progress')
+
+class CMAReportForm(FlaskForm):
+    client_id = SelectField('Client', coerce=int, validators=[DataRequired()])
+    reporting_period = SelectField('Reporting Period', choices=[
+        ('Monthly', 'Monthly'),
+        ('Quarterly', 'Quarterly'),
+        ('Annual', 'Annual')
+    ], validators=[DataRequired()])
+    report_date = DateField('Report Date', validators=[Optional()])
+    working_capital_limit = FloatField('Working Capital Limit', validators=[Optional(), NumberRange(min=0)])
+    utilized_amount = FloatField('Utilized Amount', validators=[Optional(), NumberRange(min=0)])
+    cash_credit_limit = FloatField('Cash Credit Limit', validators=[Optional(), NumberRange(min=0)])
+    overdraft_limit = FloatField('Overdraft Limit', validators=[Optional(), NumberRange(min=0)])
+    bill_discounting_limit = FloatField('Bill Discounting Limit', validators=[Optional(), NumberRange(min=0)])
+    letter_of_credit = FloatField('Letter of Credit', validators=[Optional(), NumberRange(min=0)])
+    bank_guarantee = FloatField('Bank Guarantee', validators=[Optional(), NumberRange(min=0)])
+    inventory_value = FloatField('Inventory Value', validators=[Optional(), NumberRange(min=0)])
+    receivables_value = FloatField('Receivables Value', validators=[Optional(), NumberRange(min=0)])
+    status = SelectField('Status', choices=[
+        ('Draft', 'Draft'),
+        ('Final', 'Final'),
+        ('Submitted', 'Submitted')
+    ], default='Draft')
+
+class AssessmentOrderForm(FlaskForm):
+    client_id = SelectField('Client', coerce=int, validators=[DataRequired()])
+    assessment_year = StringField('Assessment Year', validators=[DataRequired(), Length(max=10)])
+    order_type = SelectField('Order Type', choices=[
+        ('Scrutiny', 'Scrutiny Assessment'),
+        ('Best Judgment', 'Best Judgment Assessment'),
+        ('Ex-parte', 'Ex-parte Assessment'),
+        ('Penalty', 'Penalty Order'),
+        ('Rectification', 'Rectification Order')
+    ], validators=[DataRequired()])
+    order_date = DateField('Order Date', validators=[Optional()])
+    order_number = StringField('Order Number', validators=[Optional(), Length(max=50)])
+    total_income_assessed = FloatField('Total Income Assessed', validators=[Optional(), NumberRange(min=0)])
+    tax_demanded = FloatField('Tax Demanded', validators=[Optional(), NumberRange(min=0)])
+    interest_charged = FloatField('Interest Charged', validators=[Optional(), NumberRange(min=0)])
+    penalty_imposed = FloatField('Penalty Imposed', validators=[Optional(), NumberRange(min=0)])
+    appeal_filed = BooleanField('Appeal Filed')
+    appeal_date = DateField('Appeal Date', validators=[Optional()])
+    appeal_number = StringField('Appeal Number', validators=[Optional(), Length(max=50)])
+    status = SelectField('Status', choices=[
+        ('Received', 'Received'),
+        ('Under Review', 'Under Review'),
+        ('Appealed', 'Appealed'),
+        ('Settled', 'Settled')
+    ], default='Received')
+    remarks = TextAreaField('Remarks', validators=[Optional()])
+
+class XBRLReportForm(FlaskForm):
+    client_id = SelectField('Client', coerce=int, validators=[DataRequired()])
+    financial_year = StringField('Financial Year', validators=[DataRequired(), Length(max=10)])
+    report_type = SelectField('Report Type', choices=[
+        ('Balance Sheet', 'Balance Sheet'),
+        ('P&L', 'Profit & Loss'),
+        ('Cash Flow', 'Cash Flow Statement'),
+        ('Notes', 'Notes to Accounts')
+    ], validators=[DataRequired()])
+    filing_category = SelectField('Filing Category', choices=[
+        ('Individual', 'Individual'),
+        ('Company', 'Company'),
+        ('LLP', 'Limited Liability Partnership'),
+        ('Partnership', 'Partnership'),
+        ('Trust', 'Trust')
+    ], validators=[DataRequired()])
+    xbrl_file = FileField('XBRL File', validators=[
+        FileAllowed(['xbrl', 'xml'], 'Only XBRL/XML files allowed!')
+    ])
+    validation_status = SelectField('Validation Status', choices=[
+        ('Pending', 'Pending'),
+        ('Valid', 'Valid'),
+        ('Invalid', 'Invalid')
+    ], default='Pending')
+    validation_errors = TextAreaField('Validation Errors', validators=[Optional()])
+    filing_date = DateField('Filing Date', validators=[Optional()])
+    acknowledgment_number = StringField('Acknowledgment Number', validators=[Optional(), Length(max=50)])
+    status = SelectField('Status', choices=[
+        ('Draft', 'Draft'),
+        ('Validated', 'Validated'),
+        ('Filed', 'Filed')
+    ], default='Draft')

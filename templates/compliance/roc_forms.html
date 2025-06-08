@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}ROC Forms - Compliance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">ROC Forms</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('main.new_roc_form') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>New ROC Form
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="GET" action="{{ url_for('main.roc_forms') }}">
+            <div class="input-group">
+                <input type="text" class="form-control" name="search" value="{{ search }}" 
+                       placeholder="Search ROC forms...">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ROC Forms Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-building me-2"></i>ROC Forms
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if roc_forms.items %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="rocFormsTable">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Form Type</th>
+                        <th>Financial Year</th>
+                        <th>Due Date</th>
+                        <th>Filing Date</th>
+                        <th>Status</th>
+                        <th>Filing Fee</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form in roc_forms.items %}
+                    <tr>
+                        <td>{{ form.client.name }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ form.form_type }}</span>
+                        </td>
+                        <td>{{ form.financial_year }}</td>
+                        <td>
+                            {% if form.due_date %}
+                                {{ form.due_date.strftime('%d/%m/%Y') }}
+                                {% if form.due_date < today and form.status == 'Pending' %}
+                                    <br><small class="text-danger">Overdue</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.filing_date %}
+                                {{ form.filing_date.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                <span class="text-muted">Not Filed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.status == 'Pending' %}
+                                <span class="badge bg-warning">{{ form.status }}</span>
+                            {% elif form.status == 'Filed' %}
+                                <span class="badge bg-primary">{{ form.status }}</span>
+                            {% elif form.status == 'Approved' %}
+                                <span class="badge bg-success">{{ form.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.filing_fee > 0 %}
+                                ₹{{ "{:,.0f}".format(form.filing_fee) }}
+                                {% if form.late_fee > 0 %}
+                                    <br><small class="text-danger">Late Fee: ₹{{ "{:,.0f}".format(form.late_fee) }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info btn-sm" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-building"></i>
+            <h4>No ROC Forms Found</h4>
+            <p class="text-muted">Start by adding your first ROC form to track corporate compliance requirements.</p>
+            <a href="{{ url_for('main.new_roc_form') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add ROC Form
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#rocFormsTable').DataTable({
+        pageLength: 25,
+        order: [[3, 'asc']], // Sort by due date
+        columnDefs: [
+            { orderable: false, targets: [7] }
+        ]
+    });
+    
+    // Set today for comparison
+    window.today = new Date();
+});
+</script>
+{% endblock %}

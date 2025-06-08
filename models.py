@@ -189,6 +189,114 @@ class AuditReport(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
 
+class ROCForm(db.Model):
+    __tablename__ = 'roc_forms'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    form_type = Column(String(20), nullable=False)  # AOC-4, MGT-7, DIR-3 KYC, etc.
+    financial_year = Column(String(10), nullable=False)
+    filing_date = Column(Date)
+    due_date = Column(Date)
+    acknowledgment_number = Column(String(50))
+    status = Column(String(20), default='Pending')  # Pending, Filed, Approved
+    filing_fee = Column(Float, default=0)
+    late_fee = Column(Float, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class SFTReturn(db.Model):
+    __tablename__ = 'sft_returns'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    financial_year = Column(String(10), nullable=False)
+    form_type = Column(String(20), default='SFT')  # SFT-001, SFT-002
+    filing_date = Column(Date)
+    due_date = Column(Date)
+    acknowledgment_number = Column(String(50))
+    total_transactions = Column(Integer, default=0)
+    total_amount = Column(Float, default=0)
+    status = Column(String(20), default='Pending')
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class BalanceSheetAudit(db.Model):
+    __tablename__ = 'balance_sheet_audits'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    financial_year = Column(String(10), nullable=False)
+    audit_type = Column(String(50))  # Statutory, Tax, Internal, etc.
+    balance_sheet_date = Column(Date)
+    audit_completion_date = Column(Date)
+    auditor_name = Column(String(200))
+    auditor_membership_no = Column(String(20))
+    opinion_type = Column(String(50))  # Unqualified, Qualified, Adverse, Disclaimer
+    key_audit_matters = Column(Text)
+    management_letter_issued = Column(Boolean, default=False)
+    status = Column(String(20), default='In Progress')
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class CMAReport(db.Model):
+    __tablename__ = 'cma_reports'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    reporting_period = Column(String(20), nullable=False)  # Monthly, Quarterly, Annual
+    report_date = Column(Date)
+    working_capital_limit = Column(Float, default=0)
+    utilized_amount = Column(Float, default=0)
+    cash_credit_limit = Column(Float, default=0)
+    overdraft_limit = Column(Float, default=0)
+    bill_discounting_limit = Column(Float, default=0)
+    letter_of_credit = Column(Float, default=0)
+    bank_guarantee = Column(Float, default=0)
+    inventory_value = Column(Float, default=0)
+    receivables_value = Column(Float, default=0)
+    status = Column(String(20), default='Draft')
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class AssessmentOrder(db.Model):
+    __tablename__ = 'assessment_orders'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    assessment_year = Column(String(10), nullable=False)
+    order_type = Column(String(50))  # Scrutiny, Best Judgment, Ex-parte
+    order_date = Column(Date)
+    order_number = Column(String(50))
+    total_income_assessed = Column(Float, default=0)
+    tax_demanded = Column(Float, default=0)
+    interest_charged = Column(Float, default=0)
+    penalty_imposed = Column(Float, default=0)
+    appeal_filed = Column(Boolean, default=False)
+    appeal_date = Column(Date)
+    appeal_number = Column(String(50))
+    status = Column(String(20), default='Received')  # Received, Under Review, Appealed, Settled
+    remarks = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class XBRLReport(db.Model):
+    __tablename__ = 'xbrl_reports'
+    
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    financial_year = Column(String(10), nullable=False)
+    report_type = Column(String(50))  # Balance Sheet, P&L, Cash Flow
+    filing_category = Column(String(50))  # Individual, Company, LLP
+    xbrl_file_path = Column(String(500))
+    validation_status = Column(String(20), default='Pending')  # Pending, Valid, Invalid
+    validation_errors = Column(Text)
+    filing_date = Column(Date)
+    acknowledgment_number = Column(String(50))
+    status = Column(String(20), default='Draft')
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
 class Reminder(db.Model):
     __tablename__ = 'reminders'
     
