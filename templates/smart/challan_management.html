@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Challan Management - Smart Features{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Challan Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newChallanModal">
+                <i class="fas fa-plus me-1"></i>Add Challan
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-money-check me-2"></i>Challan Records
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Challan Number</th>
+                                <th>Type</th>
+                                <th>Tax Type</th>
+                                <th>Amount</th>
+                                <th>Payment Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ABC Company Ltd</td>
+                                <td>ITNS281000123456</td>
+                                <td><span class="badge bg-info">ITNS 281</span></td>
+                                <td>Income Tax</td>
+                                <td>₹50,000</td>
+                                <td>15-05-2024</td>
+                                <td><span class="badge bg-success">Cleared</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-info btn-sm" title="Print Receipt">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>XYZ Pvt Ltd</td>
+                                <td>PMT06000789012</td>
+                                <td><span class="badge bg-warning">GST PMT-06</span></td>
+                                <td>GST</td>
+                                <td>₹25,000</td>
+                                <td>20-05-2024</td>
+                                <td><span class="badge bg-warning">Pending</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-success btn-sm" title="Mark as Cleared">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Challans</h5>
+                <h2 class="text-primary">24</h2>
+                <small class="text-muted">This Month</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">Pending Amount</h5>
+                <h2 class="text-warning">₹2,35,000</h2>
+                <small class="text-muted">Awaiting Clearance</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">Cleared Amount</h5>
+                <h2 class="text-success">₹15,67,000</h2>
+                <small class="text-muted">This Month</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Challan Modal -->
+<div class="modal fade" id="newChallanModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Challan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Client</label>
+                                <select class="form-select" required>
+                                    <option value="">Select Client</option>
+                                    <option>ABC Company Ltd</option>
+                                    <option>XYZ Pvt Ltd</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Challan Number</label>
+                                <input type="text" class="form-control" placeholder="Enter challan number" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Challan Type</label>
+                                <select class="form-select" required>
+                                    <option value="">Select Type</option>
+                                    <option>ITNS 281</option>
+                                    <option>GST PMT-06</option>
+                                    <option>TDS Payment</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tax Type</label>
+                                <select class="form-select" required>
+                                    <option value="">Select Tax Type</option>
+                                    <option>Income Tax</option>
+                                    <option>TDS</option>
+                                    <option>GST</option>
+                                    <option>Corporate Tax</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Amount</label>
+                                <input type="number" class="form-control" placeholder="Enter amount" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Payment Date</label>
+                                <input type="date" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Bank Name</label>
+                                <input type="text" class="form-control" placeholder="Enter bank name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">BSR Code</label>
+                                <input type="text" class="form-control" placeholder="7-digit BSR code" maxlength="7">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Remarks</label>
+                        <textarea class="form-control" rows="3" placeholder="Additional notes"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Save Challan</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

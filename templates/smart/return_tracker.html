@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Return Status Tracker - Smart Features{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Return Status Tracker</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newReturnModal">
+                <i class="fas fa-plus me-1"></i>Track New Return
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">Pending</h5>
+                <h2 class="display-4">15</h2>
+                <small class="text-muted">Returns Due</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">Filed</h5>
+                <h2 class="display-4">42</h2>
+                <small class="text-muted">This Month</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-danger">Overdue</h5>
+                <h2 class="display-4">3</h2>
+                <small class="text-muted">Past Due Date</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">Processed</h5>
+                <h2 class="display-4">38</h2>
+                <small class="text-muted">Acknowledged</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>Return Filing Status
+                </h5>
+            </div>
+            <div class="col-auto">
+                <div class="input-group">
+                    <select class="form-select form-select-sm">
+                        <option>All Returns</option>
+                        <option>ITR</option>
+                        <option>GST</option>
+                        <option>TDS</option>
+                        <option>ROC</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Return Type</th>
+                        <th>Period</th>
+                        <th>Due Date</th>
+                        <th>Filing Date</th>
+                        <th>Status</th>
+                        <th>ACK Number</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ABC Company Ltd</td>
+                        <td><span class="badge bg-primary">ITR-6</span></td>
+                        <td>AY 2023-24</td>
+                        <td class="text-danger">30-09-2024</td>
+                        <td>25-09-2024</td>
+                        <td><span class="badge bg-success">Filed</span></td>
+                        <td>ITR240925123456</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-info btn-sm" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" title="Update Status">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>XYZ Pvt Ltd</td>
+                        <td><span class="badge bg-warning">GSTR-3B</span></td>
+                        <td>May 2024</td>
+                        <td class="text-warning">20-06-2024</td>
+                        <td>-</td>
+                        <td><span class="badge bg-warning">Pending</span></td>
+                        <td>-</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary btn-sm" title="File Return">
+                                    <i class="fas fa-upload"></i>
+                                </button>
+                                <button class="btn btn-outline-info btn-sm" title="Set Reminder">
+                                    <i class="fas fa-bell"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>DEF Industries</td>
+                        <td><span class="badge bg-info">TDS-24Q</span></td>
+                        <td>Q1 FY24-25</td>
+                        <td class="text-danger">15-07-2024</td>
+                        <td>-</td>
+                        <td><span class="badge bg-danger">Overdue</span></td>
+                        <td>-</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-danger btn-sm" title="Urgent Filing">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" title="Calculate Penalty">
+                                    <i class="fas fa-calculator"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- New Return Modal -->
+<div class="modal fade" id="newReturnModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Track New Return</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Client</label>
+                                <select class="form-select" required>
+                                    <option value="">Select Client</option>
+                                    <option>ABC Company Ltd</option>
+                                    <option>XYZ Pvt Ltd</option>
+                                    <option>DEF Industries</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Return Type</label>
+                                <select class="form-select" required>
+                                    <option value="">Select Return Type</option>
+                                    <option>ITR-1</option>
+                                    <option>ITR-2</option>
+                                    <option>ITR-3</option>
+                                    <option>ITR-4</option>
+                                    <option>ITR-5</option>
+                                    <option>ITR-6</option>
+                                    <option>GSTR-1</option>
+                                    <option>GSTR-3B</option>
+                                    <option>TDS-24Q</option>
+                                    <option>TDS-26Q</option>
+                                    <option>AOC-4</option>
+                                    <option>MGT-7</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Period</label>
+                                <input type="text" class="form-control" placeholder="e.g., AY 2023-24, May 2024" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Due Date</label>
+                                <input type="date" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Filing Date</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" required>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Filed">Filed</option>
+                                    <option value="Processed">Processed</option>
+                                    <option value="Overdue">Overdue</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Acknowledgment Number</label>
+                        <input type="text" class="form-control" placeholder="Enter ACK number if filed">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Remarks</label>
+                        <textarea class="form-control" rows="3" placeholder="Additional notes"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Save Return</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

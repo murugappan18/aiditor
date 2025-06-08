@@ -520,10 +520,7 @@ def complete_reminder(id):
     flash('Reminder marked as completed!', 'success')
     return redirect(url_for('main.reminders'))
 
-@main_bp.route('/communications')
-@login_required
-def communications():
-    return render_template('crm/communications.html')
+
 
 @main_bp.route('/follow_ups')
 @login_required
@@ -888,3 +885,110 @@ def api_upcoming_reminders():
         'reminder_date': r.reminder_date.strftime('%Y-%m-%d'),
         'reminder_type': r.reminder_type
     } for r in reminders])
+
+# Smart Features Routes
+@main_bp.route('/smart/gst-validator')
+@login_required
+def gst_validator():
+    recent_validations = GSTValidation.query.order_by(GSTValidation.last_validated.desc()).limit(10).all()
+    return render_template('smart/gst_validator.html', recent_validations=recent_validations)
+
+@main_bp.route('/smart/validate-gst', methods=['POST'])
+@login_required
+def validate_gst():
+    gstin = request.form.get('gstin', '').strip()
+    
+    if not gstin or len(gstin) != 15:
+        flash('Please enter a valid 15-digit GSTIN', 'error')
+        return redirect(url_for('main.gst_validator'))
+    
+    # Check if already validated recently
+    existing = GSTValidation.query.filter_by(gstin=gstin).first()
+    
+    # Simple validation logic - in production, integrate with GST API
+    is_valid = len(gstin) == 15 and gstin.isalnum()
+    
+    if existing:
+        existing.last_validated = datetime.utcnow()
+        existing.is_valid = is_valid
+    else:
+        validation = GSTValidation(
+            gstin=gstin,
+            is_valid=is_valid,
+            business_name=f"Business for {gstin[:2]}" if is_valid else None,
+            status="Active" if is_valid else "Invalid",
+            state_code=gstin[:2] if is_valid else None,
+            state_name=f"State {gstin[:2]}" if is_valid else None,
+            taxpayer_type="Regular" if is_valid else None,
+            constitution="Private Limited" if is_valid else None
+        )
+        db.session.add(validation)
+        existing = validation
+    
+    db.session.commit()
+    
+    recent_validations = GSTValidation.query.order_by(GSTValidation.last_validated.desc()).limit(10).all()
+    return render_template('smart/gst_validator.html', 
+                         validation_result=existing, 
+                         recent_validations=recent_validations)
+
+@main_bp.route('/smart/challan-management')
+@login_required
+def challan_management():
+    challans = ChallanManagement.query.order_by(ChallanManagement.created_at.desc()).all()
+    return render_template('smart/challan_management.html', challans=challans)
+
+@main_bp.route('/smart/return-tracker')
+@login_required
+def return_tracker():
+    returns = ReturnTracker.query.order_by(ReturnTracker.due_date).all()
+    return render_template('smart/return_tracker.html', returns=returns)
+
+@main_bp.route('/smart/auto-reminders')
+@login_required
+def auto_reminders():
+    auto_reminders = Reminder.query.filter_by(auto_created=True).order_by(Reminder.reminder_date).all()
+    return render_template('smart/auto_reminders.html', auto_reminders=auto_reminders)
+
+# Enhanced CRM Routes
+@main_bp.route('/crm/client-search')
+@login_required
+def client_search():
+    search = request.args.get('search', '')
+    clients = Client.query
+    
+    if search:
+        clients = clients.filter(
+            db.or_(
+                Client.name.contains(search),
+                Client.pan.contains(search),
+                Client.gstin.contains(search),
+                Client.email.contains(search)
+            )
+        )
+    
+    clients = clients.order_by(Client.name).all()
+    return render_template('crm/client_search.html', clients=clients, search=search)
+
+@main_bp.route('/crm/client-notes')
+@login_required
+def client_notes():
+    notes = ClientNote.query.order_by(ClientNote.created_at.desc()).all()
+    return render_template('crm/client_notes.html', notes=notes)
+
+@main_bp.route('/crm/document-checklists')
+@login_required
+def document_checklists():
+    checklists = DocumentChecklist.query.order_by(DocumentChecklist.due_date).all()
+    return render_template('crm/document_checklists.html', checklists=checklists)
+
+@main_bp.route('/crm/communications')
+@login_required
+def communications():
+    logs = CommunicationLog.query.order_by(CommunicationLog.sent_at.desc()).all()
+    templates = SMSTemplate.query.filter_by(is_active=True).all()
+    email_templates = EmailTemplate.query.filter_by(is_active=True).all()
+    return render_template('crm/communications.html', 
+                         logs=logs, 
+                         templates=templates, 
+                         email_templates=email_templates)

@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}GST Validator - Smart Features{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">GST Validator</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-check-circle me-2"></i>Validate GSTIN
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.validate_gst') }}">
+                    <div class="mb-3">
+                        <label for="gstin" class="form-label">GSTIN Number</label>
+                        <input type="text" class="form-control" id="gstin" name="gstin" 
+                               placeholder="Enter 15-digit GSTIN" maxlength="15" required>
+                        <div class="form-text">Format: 22AAAAA0000A1Z5</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i>Validate GST
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Validation Result
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if validation_result %}
+                    {% if validation_result.is_valid %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>Valid GSTIN
+                        </div>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Business Name:</strong></td>
+                                <td>{{ validation_result.business_name or 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Trade Name:</strong></td>
+                                <td>{{ validation_result.trade_name or 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    <span class="badge bg-success">{{ validation_result.status }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>State:</strong></td>
+                                <td>{{ validation_result.state_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Taxpayer Type:</strong></td>
+                                <td>{{ validation_result.taxpayer_type }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Constitution:</strong></td>
+                                <td>{{ validation_result.constitution }}</td>
+                            </tr>
+                        </table>
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle me-2"></i>Invalid GSTIN
+                        </div>
+                        <p>The provided GSTIN is not valid or not found in records.</p>
+                    {% endif %}
+                {% else %}
+                    <div class="text-muted text-center py-4">
+                        <i class="fas fa-search fa-2x mb-2"></i>
+                        <p>Enter a GSTIN to validate</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-history me-2"></i>Recent Validations
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if recent_validations %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>GSTIN</th>
+                        <th>Business Name</th>
+                        <th>Status</th>
+                        <th>State</th>
+                        <th>Last Validated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for validation in recent_validations %}
+                    <tr>
+                        <td>{{ validation.gstin }}</td>
+                        <td>{{ validation.business_name or 'N/A' }}</td>
+                        <td>
+                            {% if validation.is_valid %}
+                                <span class="badge bg-success">Valid</span>
+                            {% else %}
+                                <span class="badge bg-danger">Invalid</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ validation.state_name or 'N/A' }}</td>
+                        <td>{{ validation.last_validated.strftime('%d-%m-%Y %H:%M') }}</td>
+                        <td>
+                            <button class="btn btn-outline-primary btn-sm" 
+                                    onclick="revalidateGST('{{ validation.gstin }}')">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <h4>No Validations Yet</h4>
+            <p class="text-muted">Start validating GSTIN numbers to see history here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function revalidateGST(gstin) {
+    document.getElementById('gstin').value = gstin;
+    document.querySelector('form').submit();
+}
+</script>
+{% endblock %}
