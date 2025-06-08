@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Client Notes - CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Client Notes & Observations</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newNoteModal">
+                <i class="fas fa-plus me-1"></i>Add Note
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-sticky-note me-2"></i>Recent Notes
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="input-group">
+                            <select class="form-select form-select-sm">
+                                <option>All Types</option>
+                                <option>Audit Observation</option>
+                                <option>Call Log</option>
+                                <option>Meeting</option>
+                                <option>General</option>
+                            </select>
+                            <select class="form-select form-select-sm">
+                                <option>All Clients</option>
+                                <option>ABC Company Ltd</option>
+                                <option>XYZ Pvt Ltd</option>
+                                <option>DEF Industries</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-start border-danger border-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-danger">High Priority</span>
+                                    <small class="text-muted">2 hours ago</small>
+                                </div>
+                                <h6 class="card-title">Audit Observation - ABC Company</h6>
+                                <p class="card-text">Found discrepancies in depreciation calculation for plant & machinery. Need to review WDV calculations for FY 2023-24.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-warning">Audit Observation</span>
+                                    <small class="text-muted">Follow-up: 10-06-2024</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-start border-info border-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-info">Normal</span>
+                                    <small class="text-muted">1 day ago</small>
+                                </div>
+                                <h6 class="card-title">Call Log - XYZ Pvt Ltd</h6>
+                                <p class="card-text">Discussed GST compliance issues. Client needs guidance on input tax credit reconciliation. Scheduled meeting for next week.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-primary">Call Log</span>
+                                    <small class="text-muted">Duration: 45 mins</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-start border-success border-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-success">Low Priority</span>
+                                    <small class="text-muted">3 days ago</small>
+                                </div>
+                                <h6 class="card-title">Meeting Notes - DEF Industries</h6>
+                                <p class="card-text">Board meeting discussion on dividend policy. Reviewed proposed distribution and tax implications for shareholders.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-success">Meeting</span>
+                                    <small class="text-muted">Attendees: 5</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="card border-start border-secondary border-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-secondary">Normal</span>
+                                    <small class="text-muted">1 week ago</small>
+                                </div>
+                                <h6 class="card-title">Documentation Review - PQR Corp</h6>
+                                <p class="card-text">Reviewed books of accounts preparation. All vouchers properly filed and documented. Ready for statutory audit.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-secondary">General</span>
+                                    <small class="text-muted">Status: Complete</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-start border-warning border-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-warning">High Priority</span>
+                                    <small class="text-muted">1 week ago</small>
+                                </div>
+                                <h6 class="card-title">Compliance Issue - LMN Ltd</h6>
+                                <p class="card-text">Late filing of Form AOC-4. Need to submit immediately with additional fees. Penalty calculation required.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-danger">Audit Observation</span>
+                                    <small class="text-muted">Action: Urgent</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-start border-primary border-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-primary">Normal</span>
+                                    <small class="text-muted">2 weeks ago</small>
+                                </div>
+                                <h6 class="card-title">Tax Planning - RST Enterprises</h6>
+                                <p class="card-text">Discussed investment options for tax saving. Recommended ELSS and PPF investments for optimal tax efficiency.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-info">Meeting</span>
+                                    <small class="text-muted">Next review: 15-07-2024</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Note Modal -->
+<div class="modal fade" id="newNoteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Client Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Client</label>
+                                <select class="form-select" required>
+                                    <option value="">Select Client</option>
+                                    <option>ABC Company Ltd</option>
+                                    <option>XYZ Pvt Ltd</option>
+                                    <option>DEF Industries</option>
+                                    <option>PQR Corp</option>
+                                    <option>LMN Ltd</option>
+                                    <option>RST Enterprises</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Note Type</label>
+                                <select class="form-select" required>
+                                    <option value="">Select Type</option>
+                                    <option value="audit_observation">Audit Observation</option>
+                                    <option value="call_log">Call Log</option>
+                                    <option value="meeting">Meeting</option>
+                                    <option value="general">General</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Priority</label>
+                                <select class="form-select" required>
+                                    <option value="low">Low Priority</option>
+                                    <option value="normal" selected>Normal</option>
+                                    <option value="high">High Priority</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Follow-up Date (Optional)</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" placeholder="Brief note title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Detailed Notes</label>
+                        <textarea class="form-control" rows="6" placeholder="Detailed description of the observation, call, or meeting..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createReminder">
+                            <label class="form-check-label" for="createReminder">
+                                Create reminder for follow-up
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Save Note</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

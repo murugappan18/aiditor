@@ -1,284 +1,371 @@
 {% extends "base.html" %}
 
-{% block title %}CRM - Communications{% endblock %}
+{% block title %}SMS/Email Communications - CRM{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Communications</h1>
+    <h1 class="h2">SMS/Email Communications</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCommunicationModal">
-                <i class="fas fa-plus me-1"></i>New Communication
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendMessageModal">
+                <i class="fas fa-paper-plane me-1"></i>Send Message
+            </button>
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#templateModal">
+                <i class="fas fa-template me-1"></i>Manage Templates
             </button>
         </div>
     </div>
 </div>
 
-<!-- Communication Stats -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card bg-primary text-white">
+        <div class="card text-center">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title">Emails Sent</h6>
-                        <h3 class="mb-0">247</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-envelope fa-2x"></i>
-                    </div>
-                </div>
+                <h5 class="card-title text-primary">SMS Sent</h5>
+                <h2 class="display-4">142</h2>
+                <small class="text-muted">This Month</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-success text-white">
+        <div class="card text-center">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title">SMS Sent</h6>
-                        <h3 class="mb-0">89</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-sms fa-2x"></i>
-                    </div>
-                </div>
+                <h5 class="card-title text-success">Emails Sent</h5>
+                <h2 class="display-4">89</h2>
+                <small class="text-muted">This Month</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-info text-white">
+        <div class="card text-center">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title">Templates</h6>
-                        <h3 class="mb-0">12</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-file-text fa-2x"></i>
-                    </div>
-                </div>
+                <h5 class="card-title text-warning">Auto Reminders</h5>
+                <h2 class="display-4">35</h2>
+                <small class="text-muted">Scheduled</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-warning text-white">
+        <div class="card text-center">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title">Pending</h6>
-                        <h3 class="mb-0">5</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-clock fa-2x"></i>
-                    </div>
-                </div>
+                <h5 class="card-title text-info">Templates</h5>
+                <h2 class="display-4">12</h2>
+                <small class="text-muted">Active</small>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Communication Templates -->
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i class="fas fa-template me-2"></i>Message Templates
+                    <i class="fas fa-history me-2"></i>Communication Log
                 </h5>
             </div>
             <div class="card-body">
-                <div class="list-group">
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div class="ms-2 me-auto">
-                            <div class="fw-bold">Tax Filing Reminder</div>
-                            <small class="text-muted">Remind clients about upcoming tax filing deadlines</small>
-                        </div>
-                        <span class="badge bg-primary rounded-pill">Email</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div class="ms-2 me-auto">
-                            <div class="fw-bold">Birthday Wishes</div>
-                            <small class="text-muted">Send birthday greetings to clients</small>
-                        </div>
-                        <span class="badge bg-success rounded-pill">SMS</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div class="ms-2 me-auto">
-                            <div class="fw-bold">Payment Reminder</div>
-                            <small class="text-muted">Follow up on outstanding payments</small>
-                        </div>
-                        <span class="badge bg-warning rounded-pill">Both</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div class="ms-2 me-auto">
-                            <div class="fw-bold">Document Request</div>
-                            <small class="text-muted">Request missing documents from clients</small>
-                        </div>
-                        <span class="badge bg-info rounded-pill">Email</span>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <button class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-plus me-1"></i>Add Template
-                    </button>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Client</th>
+                                <th>Type</th>
+                                <th>Subject/Message</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>08-06-2024<br><small>10:30 AM</small></td>
+                                <td>ABC Company Ltd</td>
+                                <td><span class="badge bg-primary">SMS</span></td>
+                                <td>ITR filing reminder for AY 2023-24</td>
+                                <td><span class="badge bg-success">Delivered</span></td>
+                                <td>
+                                    <button class="btn btn-outline-info btn-sm" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>07-06-2024<br><small>03:15 PM</small></td>
+                                <td>XYZ Pvt Ltd</td>
+                                <td><span class="badge bg-success">Email</span></td>
+                                <td>GST Return Due Notification</td>
+                                <td><span class="badge bg-success">Delivered</span></td>
+                                <td>
+                                    <button class="btn btn-outline-info btn-sm" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>06-06-2024<br><small>09:00 AM</small></td>
+                                <td>DEF Industries</td>
+                                <td><span class="badge bg-warning">Birthday</span></td>
+                                <td>Birthday wishes for Mr. Sharma</td>
+                                <td><span class="badge bg-success">Sent</span></td>
+                                <td>
+                                    <button class="btn btn-outline-info btn-sm" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i class="fas fa-history me-2"></i>Recent Communications
+                    <i class="fas fa-robot me-2"></i>Auto Reminder Settings
                 </h5>
             </div>
             <div class="card-body">
-                <div class="list-group">
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">Tax Filing Reminder</h6>
-                            <small>2 hours ago</small>
-                        </div>
-                        <p class="mb-1">Sent to Rajesh Kumar - PAN: ABCDE1234F</p>
-                        <small class="text-success"><i class="fas fa-check-circle me-1"></i>Delivered</small>
-                    </div>
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">Payment Follow-up</h6>
-                            <small>1 day ago</small>
-                        </div>
-                        <p class="mb-1">Sent to ABC Industries - GSTIN: 27ABCDE1234F1Z5</p>
-                        <small class="text-info"><i class="fas fa-envelope me-1"></i>Email</small>
-                    </div>
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">Birthday Greeting</h6>
-                            <small>3 days ago</small>
-                        </div>
-                        <p class="mb-1">Sent to Priya Sharma</p>
-                        <small class="text-warning"><i class="fas fa-sms me-1"></i>SMS</small>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="autoITR" checked>
+                    <label class="form-check-label" for="autoITR">
+                        ITR Filing Reminders
+                    </label>
+                    <small class="text-muted d-block">7 days before due date</small>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="autoGST" checked>
+                    <label class="form-check-label" for="autoGST">
+                        GST Return Reminders
+                    </label>
+                    <small class="text-muted d-block">3 days before due date</small>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="autoBirthday" checked>
+                    <label class="form-check-label" for="autoBirthday">
+                        Birthday Wishes
+                    </label>
+                    <small class="text-muted d-block">On client birthday</small>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="autoFees" checked>
+                    <label class="form-check-label" for="autoFees">
+                        Outstanding Fee Alerts
+                    </label>
+                    <small class="text-muted d-block">Weekly for pending payments</small>
+                </div>
+                
+                <button class="btn btn-primary btn-sm">Save Settings</button>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cog me-2"></i>SMS/Email Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Twilio Status</label>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-warning me-2">Not Configured</span>
+                        <button class="btn btn-sm btn-outline-primary">Setup</button>
                     </div>
                 </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">SMTP Status</label>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-warning me-2">Not Configured</span>
+                        <button class="btn btn-sm btn-outline-primary">Setup</button>
+                    </div>
+                </div>
+                
+                <small class="text-muted">Configure Twilio and SMTP settings to enable automated messaging.</small>
             </div>
         </div>
     </div>
 </div>
 
-<!-- New Communication Modal -->
-<div class="modal fade" id="newCommunicationModal" tabindex="-1">
+<!-- Send Message Modal -->
+<div class="modal fade" id="sendMessageModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">New Communication</h5>
+                <h5 class="modal-title">Send Message</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="communicationForm">
+                <form>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Communication Type</label>
-                            <select class="form-select" name="type" required>
-                                <option value="">Select Type</option>
-                                <option value="email">Email</option>
-                                <option value="sms">SMS</option>
-                                <option value="both">Email & SMS</option>
-                            </select>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Message Type</label>
+                                <select class="form-select" id="messageType" required>
+                                    <option value="sms">SMS</option>
+                                    <option value="email">Email</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Recipients</label>
-                            <select class="form-select" name="recipients" required>
-                                <option value="">Select Recipients</option>
-                                <option value="all_clients">All Clients</option>
-                                <option value="active_clients">Active Clients Only</option>
-                                <option value="specific">Specific Clients</option>
-                            </select>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Template</label>
+                                <select class="form-select" id="templateSelect">
+                                    <option value="">Select Template</option>
+                                    <option value="itr_reminder">ITR Filing Reminder</option>
+                                    <option value="gst_reminder">GST Return Reminder</option>
+                                    <option value="birthday">Birthday Wishes</option>
+                                    <option value="payment_reminder">Payment Reminder</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="mb-3">
+                        <label class="form-label">Recipients</label>
+                        <select class="form-select" multiple id="recipients" required>
+                            <option value="all">All Active Clients</option>
+                            <option value="1">ABC Company Ltd</option>
+                            <option value="2">XYZ Pvt Ltd</option>
+                            <option value="3">DEF Industries</option>
+                        </select>
+                        <div class="form-text">Hold Ctrl/Cmd to select multiple clients</div>
+                    </div>
+                    
+                    <div class="mb-3" id="subjectField" style="display: none;">
                         <label class="form-label">Subject</label>
-                        <input type="text" class="form-control" name="subject" required>
+                        <input type="text" class="form-control" placeholder="Email subject">
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label">Message</label>
-                        <textarea class="form-control" name="message" rows="6" required 
-                                  placeholder="Use {{client_name}} for personalization"></textarea>
+                        <textarea class="form-control" rows="6" placeholder="Enter your message here...
+                        
+Available variables:
+{client_name} - Client name
+{due_date} - Due date
+{amount} - Amount
+{return_type} - Return type"></textarea>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Template</label>
-                        <select class="form-select" name="template">
-                            <option value="">Choose from template...</option>
-                            <option value="tax_reminder">Tax Filing Reminder</option>
-                            <option value="birthday">Birthday Wishes</option>
-                            <option value="payment">Payment Reminder</option>
-                            <option value="document">Document Request</option>
-                        </select>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="scheduleMessage">
+                            <label class="form-check-label" for="scheduleMessage">
+                                Schedule for later
+                            </label>
+                        </div>
                     </div>
                     
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" name="schedule" id="scheduleCheck">
-                        <label class="form-check-label" for="scheduleCheck">
-                            Schedule for later
-                        </label>
-                    </div>
-                    
-                    <div class="mb-3" id="scheduleDateTime" style="display: none;">
-                        <label class="form-label">Schedule Date & Time</label>
-                        <input type="datetime-local" class="form-control" name="schedule_time">
+                    <div class="mb-3" id="scheduleFields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Time</label>
+                                <input type="time" class="form-control">
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" form="communicationForm" class="btn btn-primary">
-                    <i class="fas fa-paper-plane me-1"></i>Send Communication
+                <button type="button" class="btn btn-primary">Send Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template Management Modal -->
+<div class="modal fade" id="templateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Message Templates</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Template Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ITR Filing Reminder</td>
+                                <td><span class="badge bg-primary">SMS</span></td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>GST Return Notice</td>
+                                <td><span class="badge bg-success">Email</span></td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Birthday Wishes</td>
+                                <td><span class="badge bg-warning">Both</span></td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button class="btn btn-primary mt-3">
+                    <i class="fas fa-plus me-1"></i>Add New Template
                 </button>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
-$(document).ready(function() {
-    // Toggle schedule datetime field
-    $('#scheduleCheck').change(function() {
-        if ($(this).is(':checked')) {
-            $('#scheduleDateTime').show();
+document.addEventListener('DOMContentLoaded', function() {
+    const messageType = document.getElementById('messageType');
+    const subjectField = document.getElementById('subjectField');
+    const scheduleMessage = document.getElementById('scheduleMessage');
+    const scheduleFields = document.getElementById('scheduleFields');
+    
+    messageType.addEventListener('change', function() {
+        if (this.value === 'email') {
+            subjectField.style.display = 'block';
         } else {
-            $('#scheduleDateTime').hide();
+            subjectField.style.display = 'none';
         }
     });
     
-    // Load template content
-    $('select[name="template"]').change(function() {
-        const template = $(this).val();
-        const messageField = $('textarea[name="message"]');
-        
-        const templates = {
-            'tax_reminder': 'Dear {{client_name}},\n\nThis is a friendly reminder that your tax filing deadline is approaching. Please ensure all required documents are submitted by the due date.\n\nBest regards,\nAudit Pro Team',
-            'birthday': 'Happy Birthday {{client_name}}! 🎉\n\nWishing you a wonderful year ahead filled with success and prosperity.\n\nWarm regards,\nAudit Pro Team',
-            'payment': 'Dear {{client_name}},\n\nWe hope this message finds you well. This is a gentle reminder regarding your outstanding payment. Please contact us to arrange payment at your earliest convenience.\n\nThank you,\nAudit Pro Team',
-            'document': 'Dear {{client_name}},\n\nWe require additional documents to complete your compliance requirements. Please submit the pending documents at your earliest convenience.\n\nThank you for your cooperation,\nAudit Pro Team'
-        };
-        
-        if (template && templates[template]) {
-            messageField.val(templates[template]);
+    scheduleMessage.addEventListener('change', function() {
+        if (this.checked) {
+            scheduleFields.style.display = 'block';
+        } else {
+            scheduleFields.style.display = 'none';
         }
-    });
-    
-    // Handle form submission
-    $('#communicationForm').submit(function(e) {
-        e.preventDefault();
-        // Here you would typically send the data to your backend
-        alert('Communication sent successfully!');
-        $('#newCommunicationModal').modal('hide');
-        this.reset();
     });
 });
 </script>

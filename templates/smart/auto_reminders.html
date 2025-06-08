@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}Auto Reminders - Smart Features{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Automated Reminder System</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#configureModal">
+                <i class="fas fa-cog me-1"></i>Configure Rules
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">Active Rules</h5>
+                <h2 class="display-4">8</h2>
+                <small class="text-muted">Auto-reminder rules</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">Pending Triggers</h5>
+                <h2 class="display-4">23</h2>
+                <small class="text-muted">Due this week</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">Messages Sent</h5>
+                <h2 class="display-4">156</h2>
+                <small class="text-muted">This month</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary">Success Rate</h5>
+                <h2 class="display-4">97%</h2>
+                <small class="text-muted">Delivery success</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-robot me-2"></i>Automated Reminder Rules
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Rule Name</th>
+                                <th>Trigger</th>
+                                <th>Days Before</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ITR Filing Reminder</td>
+                                <td>Due Date Approaching</td>
+                                <td>7 days</td>
+                                <td><span class="badge bg-primary">SMS + Email</span></td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" title="Disable">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>GST Return Alert</td>
+                                <td>Monthly Due Date</td>
+                                <td>3 days</td>
+                                <td><span class="badge bg-warning">SMS</span></td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" title="Disable">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Birthday Wishes</td>
+                                <td>Client Birthday</td>
+                                <td>0 days</td>
+                                <td><span class="badge bg-success">Email</span></td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" title="Disable">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Outstanding Fee Alert</td>
+                                <td>Payment Overdue</td>
+                                <td>Weekly</td>
+                                <td><span class="badge bg-danger">SMS</span></td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" title="Disable">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>TDS Return Due</td>
+                                <td>Quarterly Due Date</td>
+                                <td>5 days</td>
+                                <td><span class="badge bg-info">Email</span></td>
+                                <td><span class="badge bg-warning">Paused</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-success btn-sm" title="Enable">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar me-2"></i>Upcoming Triggers
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">ITR Filing - ABC Co</div>
+                            <small class="text-muted">Due: 30-09-2024</small>
+                        </div>
+                        <span class="badge bg-warning rounded-pill">2 days</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">GST Return - XYZ Ltd</div>
+                            <small class="text-muted">Due: 20-06-2024</small>
+                        </div>
+                        <span class="badge bg-danger rounded-pill">Today</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Birthday - Mr. Kumar</div>
+                            <small class="text-muted">DEF Industries</small>
+                        </div>
+                        <span class="badge bg-success rounded-pill">Tomorrow</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Fee Payment - LMN Corp</div>
+                            <small class="text-muted">₹25,000 pending</small>
+                        </div>
+                        <span class="badge bg-warning rounded-pill">3 days</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Performance Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-success">94%</h4>
+                            <small class="text-muted">Email Success</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-primary">98%</h4>
+                        <small class="text-muted">SMS Success</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <h5 class="text-info">₹2.1L</h5>
+                    <small class="text-muted">Fees collected via reminders this month</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configure Rule Modal -->
+<div class="modal fade" id="configureModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Configure Auto-Reminder Rule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Rule Name</label>
+                                <input type="text" class="form-control" placeholder="e.g., ITR Filing Reminder" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Trigger Type</label>
+                                <select class="form-select" required>
+                                    <option value="">Select Trigger</option>
+                                    <option value="due_date">Due Date Approaching</option>
+                                    <option value="birthday">Client Birthday</option>
+                                    <option value="overdue">Payment Overdue</option>
+                                    <option value="custom">Custom Date</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Days Before/After</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" value="7" min="0" max="365">
+                                    <select class="form-select">
+                                        <option value="before">Days Before</option>
+                                        <option value="after">Days After</option>
+                                        <option value="on">On the Day</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Communication Method</label>
+                                <select class="form-select" required>
+                                    <option value="sms">SMS Only</option>
+                                    <option value="email">Email Only</option>
+                                    <option value="both">SMS + Email</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Apply to Client Types</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="allClients" checked>
+                            <label class="form-check-label" for="allClients">All Active Clients</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="corporateOnly">
+                            <label class="form-check-label" for="corporateOnly">Corporate Clients Only</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="individualOnly">
+                            <label class="form-check-label" for="individualOnly">Individual Clients Only</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Message Template</label>
+                        <select class="form-select">
+                            <option value="">Select Existing Template</option>
+                            <option value="itr_reminder">ITR Filing Reminder</option>
+                            <option value="gst_reminder">GST Return Reminder</option>
+                            <option value="birthday">Birthday Wishes</option>
+                            <option value="payment">Payment Reminder</option>
+                        </select>
+                        <div class="form-text">Or create a new template below</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Custom Message (Optional)</label>
+                        <textarea class="form-control" rows="4" placeholder="Dear {client_name},
+
+Your {return_type} for {period} is due on {due_date}. Please ensure timely filing to avoid penalties.
+
+Best regards,
+Your CA Team"></textarea>
+                        <div class="form-text">Available variables: {client_name}, {due_date}, {return_type}, {period}, {amount}</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Send Time</label>
+                                <input type="time" class="form-control" value="09:00">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select">
+                                    <option value="active">Active</option>
+                                    <option value="paused">Paused</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Save Rule</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

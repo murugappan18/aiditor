@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Client Search - CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Client Master Data Search</h1>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-search me-2"></i>Advanced Client Search
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Search Term</label>
+                                <input type="text" class="form-control" name="search" 
+                                       value="{{ search }}" placeholder="Name, PAN, GSTIN, Email">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Search Type</label>
+                                <select class="form-select" name="search_type">
+                                    <option value="all">All Fields</option>
+                                    <option value="name">Name Only</option>
+                                    <option value="pan">PAN Only</option>
+                                    <option value="gstin">GSTIN Only</option>
+                                    <option value="email">Email Only</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i>Search Clients
+                    </button>
+                    <a href="{{ url_for('main.client_search') }}" class="btn btn-secondary">Clear</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">Quick GST Validation</h5>
+                <p class="text-muted">Validate client GSTIN instantly</p>
+                <a href="{{ url_for('main.gst_validator') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-check-circle me-1"></i>Validate GST
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-users me-2"></i>Client Results
+            {% if search %}<small class="text-muted">(Search: "{{ search }}")</small>{% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if clients %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>PAN</th>
+                        <th>GSTIN</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr>
+                        <td>
+                            <strong>{{ client.name }}</strong><br>
+                            <small class="text-muted">{{ client.business_type or 'N/A' }}</small>
+                        </td>
+                        <td>
+                            <code>{{ client.pan or 'N/A' }}</code>
+                            {% if client.pan %}
+                            <button class="btn btn-sm btn-outline-primary ms-1" title="Verify PAN">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.gstin %}
+                            <code>{{ client.gstin }}</code>
+                            <button class="btn btn-sm btn-outline-success ms-1" title="Validate GSTIN">
+                                <i class="fas fa-shield-alt"></i>
+                            </button>
+                            {% else %}
+                            <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.email %}
+                            <div><i class="fas fa-envelope me-1"></i>{{ client.email }}</div>
+                            {% endif %}
+                            {% if client.phone %}
+                            <div><i class="fas fa-phone me-1"></i>{{ client.phone }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('main.edit_client', id=client.id) }}" 
+                                   class="btn btn-outline-primary btn-sm" title="Edit Client">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-outline-info btn-sm" title="View Notes">
+                                    <i class="fas fa-sticky-note"></i>
+                                </button>
+                                <button class="btn btn-outline-warning btn-sm" title="Send SMS">
+                                    <i class="fas fa-sms"></i>
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" title="Send Email">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-search"></i>
+            {% if search %}
+            <h4>No Results Found</h4>
+            <p class="text-muted">No clients match your search criteria: "{{ search }}"</p>
+            <p>Try searching with different terms or check spelling.</p>
+            {% else %}
+            <h4>Search for Clients</h4>
+            <p class="text-muted">Enter search terms above to find clients by name, PAN, GSTIN, or email.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Auto-format PAN and GSTIN inputs
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="search"]');
+    searchInput.addEventListener('input', function(e) {
+        let value = e.target.value.toUpperCase();
+        
+        // Auto-detect and format PAN (10 chars)
+        if (value.length === 10 && /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(value)) {
+            e.target.classList.add('is-valid');
+        }
+        // Auto-detect and format GSTIN (15 chars)
+        else if (value.length === 15 && /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z][Z][0-9A-Z]$/.test(value)) {
+            e.target.classList.add('is-valid');
+        } else {
+            e.target.classList.remove('is-valid');
+        }
+        
+        e.target.value = value;
+    });
+});
+</script>
+{% endblock %}
