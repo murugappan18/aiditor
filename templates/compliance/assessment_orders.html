@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Orders - Compliance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Assessment Orders</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('main.new_assessment_order') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>New Assessment Order
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-gavel me-2"></i>Assessment Orders
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if orders.items %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Assessment Year</th>
+                        <th>Order Type</th>
+                        <th>Tax Demanded</th>
+                        <th>Appeal Status</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders.items %}
+                    <tr>
+                        <td>{{ order.client.name }}</td>
+                        <td>{{ order.assessment_year }}</td>
+                        <td><span class="badge bg-info">{{ order.order_type }}</span></td>
+                        <td>₹{{ "{:,.0f}".format(order.tax_demanded) if order.tax_demanded else '-' }}</td>
+                        <td>
+                            {% if order.appeal_filed %}
+                                <span class="badge bg-warning">Appeal Filed</span>
+                            {% else %}
+                                <span class="text-muted">No Appeal</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if order.status == 'Received' %}
+                                <span class="badge bg-primary">{{ order.status }}</span>
+                            {% elif order.status == 'Under Review' %}
+                                <span class="badge bg-warning">{{ order.status }}</span>
+                            {% elif order.status == 'Appealed' %}
+                                <span class="badge bg-info">{{ order.status }}</span>
+                            {% elif order.status == 'Settled' %}
+                                <span class="badge bg-success">{{ order.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-gavel"></i>
+            <h4>No Assessment Orders Found</h4>
+            <p class="text-muted">Start by adding your first assessment order.</p>
+            <a href="{{ url_for('main.new_assessment_order') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add Assessment Order
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

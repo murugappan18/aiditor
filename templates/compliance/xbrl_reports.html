@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}XBRL Reports - Compliance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">XBRL Reports</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('main.new_xbrl_report') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>New XBRL Report
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-code me-2"></i>XBRL Financial Reports
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if xbrl_reports.items %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Financial Year</th>
+                        <th>Report Type</th>
+                        <th>Filing Category</th>
+                        <th>Validation</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in xbrl_reports.items %}
+                    <tr>
+                        <td>{{ report.client.name }}</td>
+                        <td>{{ report.financial_year }}</td>
+                        <td><span class="badge bg-info">{{ report.report_type }}</span></td>
+                        <td>{{ report.filing_category }}</td>
+                        <td>
+                            {% if report.validation_status == 'Valid' %}
+                                <span class="badge bg-success">Valid</span>
+                            {% elif report.validation_status == 'Invalid' %}
+                                <span class="badge bg-danger">Invalid</span>
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if report.status == 'Draft' %}
+                                <span class="badge bg-secondary">{{ report.status }}</span>
+                            {% elif report.status == 'Validated' %}
+                                <span class="badge bg-warning">{{ report.status }}</span>
+                            {% elif report.status == 'Filed' %}
+                                <span class="badge bg-success">{{ report.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" title="Validate">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-code"></i>
+            <h4>No XBRL Reports Found</h4>
+            <p class="text-muted">Start by adding your first XBRL report for electronic filing.</p>
+            <a href="{{ url_for('main.new_xbrl_report') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add XBRL Report
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

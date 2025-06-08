@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}CMA Reports - Compliance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">CMA Reports</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('main.new_cma_report') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>New CMA Report
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-chart-pie me-2"></i>Credit Monitoring Arrangement Reports
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if cma_reports.items %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Period</th>
+                        <th>Working Capital</th>
+                        <th>Utilized</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in cma_reports.items %}
+                    <tr>
+                        <td>{{ report.client.name }}</td>
+                        <td>{{ report.reporting_period }}</td>
+                        <td>₹{{ "{:,.0f}".format(report.working_capital_limit) if report.working_capital_limit else '-' }}</td>
+                        <td>₹{{ "{:,.0f}".format(report.utilized_amount) if report.utilized_amount else '-' }}</td>
+                        <td>
+                            {% if report.status == 'Draft' %}
+                                <span class="badge bg-warning">{{ report.status }}</span>
+                            {% elif report.status == 'Final' %}
+                                <span class="badge bg-success">{{ report.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-chart-pie"></i>
+            <h4>No CMA Reports Found</h4>
+            <p class="text-muted">Start by adding your first CMA report.</p>
+            <a href="{{ url_for('main.new_cma_report') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add CMA Report
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
