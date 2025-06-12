@@ -330,6 +330,8 @@ class ReturnTracker(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    client = relationship("Client", backref="returns")
+
 class GSTValidation(db.Model):
     __tablename__ = 'gst_validations'
     
