@@ -107,7 +107,9 @@ def income_tax_returns():
     returns = IncomeTaxReturn.query.join(Client).order_by(IncomeTaxReturn.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-    return render_template('tax/income_tax.html', returns=returns)
+    form = IncomeTaxReturnForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+    return render_template('tax/income_tax.html', returns=returns, form=form, today=date.today())
 
 @main_bp.route('/tax/income-tax/new', methods=['GET', 'POST'])
 @login_required
@@ -144,7 +146,9 @@ def tds_returns():
     returns = TDSReturn.query.join(Client).order_by(TDSReturn.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-    return render_template('tax/tds.html', returns=returns)
+    form = TDSReturnForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+    return render_template('tax/tds.html', returns=returns, form=form, today=date.today())
 
 @main_bp.route('/tax/tds/new', methods=['GET', 'POST'])
 @login_required
@@ -181,7 +185,9 @@ def gst_returns():
     returns = GSTReturn.query.join(Client).order_by(GSTReturn.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-    return render_template('tax/gst.html', returns=returns)
+    form = GSTReturnForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+    return render_template('tax/gst.html', returns=returns, form=form, today=date.today())
 
 @main_bp.route('/tax/gst/new', methods=['GET', 'POST'])
 @login_required
@@ -219,7 +225,8 @@ def employees():
     employees_pagination = Employee.query.order_by(Employee.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-    return render_template('admin/employees.html', employees=employees_pagination)
+    form = EmployeeForm()
+    return render_template('admin/employees.html', form=form, employees=employees_pagination)
 
 @main_bp.route('/admin/employees/new', methods=['GET', 'POST'])
 @login_required
@@ -256,7 +263,9 @@ def payroll():
     payroll_pagination = PayrollEntry.query.join(Employee).order_by(PayrollEntry.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-    return render_template('admin/payroll.html', payroll=payroll_pagination)
+    form = PayrollEntryForm()
+    form.employee_id.choices = [(e.id, e.name) for e in Employee.query.filter_by(status='Active').all()]
+    return render_template('admin/payroll.html', form=form, payroll=payroll_pagination)
 
 @main_bp.route('/admin/payroll/new', methods=['GET', 'POST'])
 @login_required
@@ -300,7 +309,9 @@ def documents():
     documents_pagination = Document.query.join(Client, isouter=True).order_by(Document.upload_date.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-    return render_template('admin/documents.html', documents=documents_pagination)
+    form = DocumentForm()
+    form.client_id.choices = [(0, 'Select Client')] + [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+    return render_template('admin/documents.html', form=form, documents=documents_pagination)
 
 @main_bp.route('/admin/documents/new', methods=['GET', 'POST'])
 @login_required
@@ -347,8 +358,11 @@ def outstanding_reports():
         OutstandingFee.status == 'Pending',
         OutstandingFee.due_date < date.today()
     ).count()
+
+    form = OutstandingFeeForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
     
-    return render_template('reports/outstanding.html', 
+    return render_template('reports/outstanding.html', form=form, 
                          outstanding=outstanding_pagination,
                          total_outstanding=total_outstanding,
                          overdue_count=overdue_count)
@@ -389,7 +403,15 @@ def users():
     users_pagination = User.query.join(Role).order_by(User.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-    return render_template('settings/users.html', users=users_pagination)
+
+    if current_user.role.name != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    form = UserForm()
+    form.role_id.choices = [(r.id, r.name) for r in Role.query.all()]
+    
+    return render_template('settings/users.html', form=form, users=users_pagination, datetime=datetime)
 
 @main_bp.route('/settings/users/new', methods=['GET', 'POST'])
 @login_required
@@ -543,9 +565,9 @@ def inventory():
 @main_bp.route('/analytics')
 @login_required
 def analytics():
-    # Get analytics data
+    # Use SQLite's strftime to extract the 'YYYY-MM' format for the month
     monthly_revenue = db.session.query(
-        func.date_trunc('month', OutstandingFee.created_at).label('month'),
+        func.strftime('%Y-%m', OutstandingFee.created_at).label('month'),
         func.sum(OutstandingFee.amount).label('total')
     ).filter(OutstandingFee.status == 'Paid').group_by('month').all()
     
@@ -589,7 +611,7 @@ def roc_forms():
         page=page, per_page=20, error_out=False
     )
     
-    return render_template('compliance/roc_forms.html', roc_forms=roc_forms, search=search)
+    return render_template('compliance/roc_forms.html', roc_forms=roc_forms, search=search, today=date.today())
 
 @main_bp.route('/roc_forms/new', methods=['GET', 'POST'])
 @login_required
@@ -636,7 +658,7 @@ def sft_returns():
         page=page, per_page=20, error_out=False
     )
     
-    return render_template('compliance/sft_returns.html', sft_returns=sft_returns, search=search)
+    return render_template('compliance/sft_returns.html', sft_returns=sft_returns, search=search, today=date.today())
 
 @main_bp.route('/sft_returns/new', methods=['GET', 'POST'])
 @login_required
@@ -663,7 +685,7 @@ def new_sft_return():
         flash('SFT Return created successfully!', 'success')
         return redirect(url_for('main.sft_returns'))
     
-    return render_template('compliance/sft_form.html', form=form, title='New SFT Return')
+    return render_template('compliance/sft_return.html', form=form, title='New SFT Return')
 
 # Balance Sheet & Audit Routes
 @main_bp.route('/balance_sheet_audits')
@@ -712,7 +734,7 @@ def new_balance_sheet_audit():
         flash('Balance Sheet & Audit entry created successfully!', 'success')
         return redirect(url_for('main.balance_sheet_audits'))
     
-    return render_template('compliance/balance_sheet_form.html', form=form, title='New Balance Sheet & Audit')
+    return render_template('compliance/audit.html', form=form, title='New Balance Sheet & Audit')
 
 # CMA Reports Routes
 @main_bp.route('/cma_reports')

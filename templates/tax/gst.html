@@ -49,7 +49,7 @@
                                     <td>
                                         {% if gst.due_date %}
                                             {{ gst.due_date.strftime('%d/%m/%Y') }}
-                                            {% if gst.due_date < date.today() and gst.status == 'Pending' %}
+                                            {% if gst.due_date < today and gst.status == 'Pending' %}
                                                 <span class="badge bg-danger ms-1">Overdue</span>
                                             {% endif %}
                                         {% else %}

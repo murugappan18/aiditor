@@ -146,7 +146,7 @@
                                         {% if user.last_login %}
                                             {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
                                             <br><small class="text-muted">
-                                                {% set time_diff = (moment.utcnow() - user.last_login).days if user.last_login else None %}
+                                                {% set time_diff = (datetime.utcnow() - user.last_login).days if user.last_login else None %}
                                                 {% if time_diff == 0 %}
                                                     Today
                                                 {% elif time_diff == 1 %}
@@ -260,7 +260,7 @@
                         <div class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <strong>{{ current_user.username }}</strong> logged in
-                                <br><small class="text-muted">{{ moment.utcnow().strftime('%d/%m/%Y %H:%M') }}</small>
+                                <br><small class="text-muted">{{ datetime.utcnow().strftime('%d/%m/%Y %H:%M') }}</small>
                             </div>
                             <span class="badge bg-success">Login</span>
                         </div>

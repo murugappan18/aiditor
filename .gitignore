@@ -1,0 +1,8 @@
+# Ignore entire folders and their contents
+Include/
+Lib/
+Scripts/
+__pycache__/
+
+# Ignore a specific file in the root directory
+pyvenv.cfg

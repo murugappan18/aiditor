@@ -49,7 +49,7 @@
                                     <td>
                                         {% if itr.due_date %}
                                             {{ itr.due_date.strftime('%d/%m/%Y') }}
-                                            {% if itr.due_date < date.today() and itr.status == 'Pending' %}
+                                            {% if itr.due_date < today and itr.status == 'Pending' %}
                                                 <span class="badge bg-danger ms-1">Overdue</span>
                                             {% endif %}
                                         {% else %}

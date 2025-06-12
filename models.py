@@ -181,6 +181,7 @@ class ROCForm(db.Model):
     __tablename__ = 'roc_forms'
     
     id = Column(Integer, primary_key=True)
+    client = db.relationship('Client', backref='roc_forms') # Establishing relationship with Client
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
     form_type = Column(String(20), nullable=False)  # AOC-4, MGT-7, DIR-3 KYC, etc.
     financial_year = Column(String(10), nullable=False)
@@ -197,6 +198,7 @@ class SFTReturn(db.Model):
     __tablename__ = 'sft_returns'
     
     id = Column(Integer, primary_key=True)
+    client = db.relationship('Client', backref='sft_returns') # Establishing relationship with Client
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
     financial_year = Column(String(10), nullable=False)
     form_type = Column(String(20), default='SFT')  # SFT-001, SFT-002
