@@ -963,8 +963,68 @@ def challan_management():
 @main_bp.route('/smart/return-tracker')
 @login_required
 def return_tracker():
-    returns = ReturnTracker.query.order_by(ReturnTracker.due_date).all()
-    return render_template('smart/return_tracker.html', returns=returns)
+    filter_type = request.args.get('filter', '')
+    clients = Client.query.order_by(Client.name).all()
+
+    if filter_type:
+        # Match entries like 'ITR-1', 'ITR-2', etc., using LIKE
+        returns = ReturnTracker.query.filter(ReturnTracker.return_type.like(f"{filter_type}%"))\
+                                     .order_by(ReturnTracker.due_date).all()
+    else:
+        returns = ReturnTracker.query.order_by(ReturnTracker.due_date).all()
+
+    # Status counters
+    pending_count = ReturnTracker.query.filter_by(status='Pending').count()
+    filed_count = ReturnTracker.query.filter_by(status='Filed').count()
+    overdue_count = ReturnTracker.query.filter_by(status='Overdue').count()
+    processed_count = ReturnTracker.query.filter_by(status='Processed').count()
+
+    return render_template(
+        'smart/return_tracker.html',
+        returns=returns,
+        clients=clients,
+        pending_count=pending_count,
+        filed_count=filed_count,
+        overdue_count=overdue_count,
+        processed_count=processed_count,
+        filter_type=filter_type  # Pass the filter value to keep dropdown selection
+    )
+
+@main_bp.route('/smart/add-return', methods=['POST'])
+@login_required
+def add_return():
+    try:
+        client_id = request.form.get('client_id')
+        return_type = request.form.get('return_type')
+        period = request.form.get('period')
+        due_date = request.form.get('due_date')
+        filing_date = request.form.get('filing_date')
+        status = request.form.get('status')
+        ack_number = request.form.get('acknowledgment_number')
+        remarks = request.form.get('remarks')
+
+        # Convert dates to proper format
+        due_date = datetime.strptime(due_date, '%Y-%m-%d').date() if due_date else None
+        filing_date = datetime.strptime(filing_date, '%Y-%m-%d').date() if filing_date else None
+
+        new_return = ReturnTracker(
+            client_id=int(client_id),
+            return_type=return_type,
+            period=period,
+            due_date=due_date,
+            filing_date=filing_date,
+            status=status,
+            acknowledgment_number=ack_number,
+            remarks=remarks
+        )
+        db.session.add(new_return)
+        db.session.commit()
+        flash("New return successfully added.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error adding return: {str(e)}", "danger")
+
+    return redirect(url_for('main.return_tracker'))
 
 @main_bp.route('/smart/auto-reminders')
 @login_required
