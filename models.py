@@ -430,3 +430,21 @@ class AutoReminderSetting(db.Model):
     gst = Column(Boolean, default=True)
     birthday = Column(Boolean, default=True)
     fees = Column(Boolean, default=True)
+
+class InventoryItems(db.Model):
+    __tablename__ = 'inventory_items'
+    
+    id = Column(Integer, primary_key=True)
+    item_name = Column(String(200), nullable=False)
+    item_code = Column(String(50), unique=True, nullable=False)
+    description = Column(Text)
+    unit = Column(String(50), default='pcs')
+    unit_price = Column(Float, default=0.0)
+    total_value = Column(Float, default=0.0)
+    current_stock = Column(Integer, default=0)
+    minimum_stock = Column(Integer, default=0)
+    location = Column(String(200), default='Not Specified')
+    category = Column(String(100), default='Others')
+    status = Column(String(20), default='Not Available')
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))

@@ -542,8 +542,6 @@ def complete_reminder(id):
     flash('Reminder marked as completed!', 'success')
     return redirect(url_for('main.reminders'))
 
-
-
 @main_bp.route('/follow_ups')
 @login_required
 def follow_ups():
@@ -560,7 +558,62 @@ def follow_ups():
 @main_bp.route('/inventory')
 @login_required
 def inventory():
-    return render_template('erp/inventory.html')
+    form = InventoryForm()
+    items = InventoryItems.query.all()
+
+    # Calculate dynamic stats
+    total_items = len(items)
+    low_stock = InventoryItems.query.filter(InventoryItems.current_stock < InventoryItems.minimum_stock).count()
+    total_value = db.session.query(func.sum(InventoryItems.total_value)).scalar() or 0.0
+    categories_count = len(form.category.choices) or 0
+
+    return render_template('erp/inventory.html',
+                           items=items,
+                           total_items=total_items,
+                           low_stock=low_stock,
+                           total_value=total_value,
+                           categories_count=categories_count,
+                           form=form)
+
+@main_bp.route('/inventory/new', methods=['POST'])
+@login_required
+def new_inventory_item():
+    form = InventoryForm()
+    
+    if form.validate_on_submit():
+        status='Not Available'
+        total_value=0.0
+        if form.current_stock.data <= 0:
+            status='Out of Stock'
+        elif form.current_stock.data < form.minimum_stock.data:
+            status='Low Stock'
+        elif form.current_stock.data >= form.minimum_stock.data:
+            status='In Stock'
+        if(form.unit_price.data and form.current_stock.data):
+            total_value = round(form.unit_price.data * form.current_stock.data, 2)
+        item = InventoryItems(
+            item_name=form.item_name.data,
+            item_code=form.item_code.data,
+            description=form.description.data,
+            unit=form.unit.data,
+            unit_price=form.unit_price.data or 0.0,
+            total_value=total_value or 0.0,
+            current_stock=form.current_stock.data or 0,
+            minimum_stock=form.minimum_stock.data or 0,
+            location=form.location.data,
+            category=form.category.data,
+            status=status,
+            created_at=datetime.now(),
+            created_by=current_user.id
+        )
+        
+        db.session.add(item)
+        db.session.commit()
+        flash('Inventory item created successfully!', 'success')
+        return redirect(url_for('main.inventory'))
+    
+    flash('Error when Creating New Inventory Item!', 'danger')
+    return render_template('erp/inventory.html', form=form, title='New Inventory Item')
 
 @main_bp.route('/analytics')
 @login_required
