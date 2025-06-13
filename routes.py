@@ -1016,8 +1016,68 @@ def challan_management():
 @main_bp.route('/smart/return-tracker')
 @login_required
 def return_tracker():
-    returns = ReturnTracker.query.order_by(ReturnTracker.due_date).all()
-    return render_template('smart/return_tracker.html', returns=returns)
+    filter_type = request.args.get('filter', '')
+    clients = Client.query.order_by(Client.name).all()
+
+    if filter_type:
+        # Match entries like 'ITR-1', 'ITR-2', etc., using LIKE
+        returns = ReturnTracker.query.filter(ReturnTracker.return_type.like(f"{filter_type}%"))\
+                                     .order_by(ReturnTracker.due_date).all()
+    else:
+        returns = ReturnTracker.query.order_by(ReturnTracker.due_date).all()
+
+    # Status counters
+    pending_count = ReturnTracker.query.filter_by(status='Pending').count()
+    filed_count = ReturnTracker.query.filter_by(status='Filed').count()
+    overdue_count = ReturnTracker.query.filter_by(status='Overdue').count()
+    processed_count = ReturnTracker.query.filter_by(status='Processed').count()
+
+    return render_template(
+        'smart/return_tracker.html',
+        returns=returns,
+        clients=clients,
+        pending_count=pending_count,
+        filed_count=filed_count,
+        overdue_count=overdue_count,
+        processed_count=processed_count,
+        filter_type=filter_type  # Pass the filter value to keep dropdown selection
+    )
+
+@main_bp.route('/smart/add-return', methods=['POST'])
+@login_required
+def add_return():
+    try:
+        client_id = request.form.get('client_id')
+        return_type = request.form.get('return_type')
+        period = request.form.get('period')
+        due_date = request.form.get('due_date')
+        filing_date = request.form.get('filing_date')
+        status = request.form.get('status')
+        ack_number = request.form.get('acknowledgment_number')
+        remarks = request.form.get('remarks')
+
+        # Convert dates to proper format
+        due_date = datetime.strptime(due_date, '%Y-%m-%d').date() if due_date else None
+        filing_date = datetime.strptime(filing_date, '%Y-%m-%d').date() if filing_date else None
+
+        new_return = ReturnTracker(
+            client_id=int(client_id),
+            return_type=return_type,
+            period=period,
+            due_date=due_date,
+            filing_date=filing_date,
+            status=status,
+            acknowledgment_number=ack_number,
+            remarks=remarks
+        )
+        db.session.add(new_return)
+        db.session.commit()
+        flash("New return successfully added.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error adding return: {str(e)}", "danger")
+
+    return redirect(url_for('main.return_tracker'))
 
 @main_bp.route('/smart/auto-reminders')
 @login_required
@@ -1045,11 +1105,54 @@ def client_search():
     clients = clients.order_by(Client.name).all()
     return render_template('crm/client_search.html', clients=clients, search=search)
 
-@main_bp.route('/crm/client-notes')
+@main_bp.route('/crm/client-notes', methods=['GET', 'POST'])
 @login_required
 def client_notes():
-    notes = ClientNote.query.order_by(ClientNote.created_at.desc()).all()
-    return render_template('crm/client_notes.html', notes=notes)
+    if request.method == 'POST':
+        try:
+            client_id = request.form['client_id']
+            note_type = request.form['note_type']
+            priority = request.form['priority']
+            follow_up_date = request.form.get('follow_up_date') or None
+            title = request.form['title']
+            content = request.form['content']
+
+            new_note = ClientNote(
+                client_id=client_id,
+                note_type=note_type,
+                priority=priority,
+                follow_up_date=follow_up_date,
+                title=title,
+                content=content,
+                created_by=current_user.id
+            )
+
+            db.session.add(new_note)
+            db.session.commit()
+            flash("Client note added successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error saving note: {e}", "danger")
+
+        return redirect(url_for('main.client_notes'))
+
+    # GET: Handle filters
+    note_type = request.args.get('note_type', '')
+    client_id = request.args.get('client_id', '')
+
+    notes_query = ClientNote.query.order_by(ClientNote.created_at.desc())
+
+    if note_type:
+        notes_query = notes_query.filter(ClientNote.note_type == note_type)
+    if client_id:
+        notes_query = notes_query.filter(ClientNote.client_id == int(client_id))
+
+    notes = notes_query.all()
+    clients = Client.query.all()
+
+    return render_template('crm/client_notes.html', notes=notes, clients=clients, note_type=note_type)
+
+
 
 @main_bp.route('/crm/document-checklists')
 @login_required
