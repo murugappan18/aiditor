@@ -372,7 +372,7 @@ class SMSTemplate(db.Model):
     
     id = Column(Integer, primary_key=True)
     template_name = Column(String(100), nullable=False)
-    template_type = Column(String(50))  # Reminder, Birthday, Payment, General
+    template_type = Column(String(50))  # sms, email
     content = Column(Text, nullable=False)
     variables = Column(String(500))  # JSON list of variables like {client_name}, {due_date}
     is_active = Column(Boolean, default=True)
@@ -384,7 +384,7 @@ class EmailTemplate(db.Model):
     
     id = Column(Integer, primary_key=True)
     template_name = Column(String(100), nullable=False)
-    template_type = Column(String(50))  # Reminder, Birthday, Payment, General
+    template_type = Column(String(50))  # sms, email
     subject = Column(String(200), nullable=False)
     content = Column(Text, nullable=False)
     variables = Column(String(500))  # JSON list of variables
@@ -420,3 +420,13 @@ class Reminder(db.Model):
     notification_sent = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
+
+class AutoReminderSetting(db.Model):
+    __tablename__ = 'auto_reminder_settings'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    itr = Column(Boolean, default=True)
+    gst = Column(Boolean, default=True)
+    birthday = Column(Boolean, default=True)
+    fees = Column(Boolean, default=True)

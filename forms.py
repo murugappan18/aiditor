@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, SelectField, TextAreaField, DateField, FloatField, IntegerField, BooleanField
+from wtforms import StringField, PasswordField, SelectField, TextAreaField, DateField, FloatField, IntegerField, BooleanField, HiddenField
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from wtforms.widgets import TextArea
 
@@ -325,3 +325,25 @@ class XBRLReportForm(FlaskForm):
         ('Validated', 'Validated'),
         ('Filed', 'Filed')
     ], default='Draft')
+
+class SMSTemplateForm(FlaskForm):
+    template_id = HiddenField()  # Used for editing
+    template_name = StringField('Template Name', validators=[DataRequired(), Length(max=100)])
+    template_type = SelectField('Template Type', choices=[
+        ('email', 'email'),
+        ('sms', 'sms')
+    ])
+    content = TextAreaField('Template Content', validators=[DataRequired()])
+    is_active = BooleanField('Active', default=True)
+
+
+class EmailTemplateForm(FlaskForm):
+    template_id = HiddenField()
+    template_name = StringField('Template Name', validators=[DataRequired(), Length(max=100)])
+    template_type = SelectField('Template Type', choices=[
+        ('email', 'email'),
+        ('sms', 'sms')
+    ])
+    subject = StringField('Email Subject', validators=[DataRequired(), Length(max=200)])
+    content = TextAreaField('Template Content', validators=[DataRequired()])
+    is_active = BooleanField('Active', default=True)
