@@ -287,18 +287,28 @@ class XBRLReport(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
 
+
+
 class ClientNote(db.Model):
     __tablename__ = 'client_notes'
     
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
-    note_type = Column(String(50))  # Audit Observation, Call Log, Meeting, General
+    note_type = Column(String(50), nullable=False)  # Audit Observation, Call Log, Meeting, General
     title = Column(String(200), nullable=False)
     content = Column(Text, nullable=False)
     priority = Column(String(20), default='Normal')  # High, Normal, Low
-    follow_up_date = Column(Date)
+    follow_up_date = Column(Date, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
+
+    # Optional relationships for ease of access in templates
+    client = relationship('Client', backref='notes')
+    user = relationship('User', backref='client_notes')
+
+    def __repr__(self):
+        return f"<ClientNote(id={self.id}, title={self.title}, client_id={self.client_id})>"
+
 
 class DocumentChecklist(db.Model):
     __tablename__ = 'document_checklists'

@@ -1052,11 +1052,54 @@ def client_search():
     clients = clients.order_by(Client.name).all()
     return render_template('crm/client_search.html', clients=clients, search=search)
 
-@main_bp.route('/crm/client-notes')
+@main_bp.route('/crm/client-notes', methods=['GET', 'POST'])
 @login_required
 def client_notes():
-    notes = ClientNote.query.order_by(ClientNote.created_at.desc()).all()
-    return render_template('crm/client_notes.html', notes=notes)
+    if request.method == 'POST':
+        try:
+            client_id = request.form['client_id']
+            note_type = request.form['note_type']
+            priority = request.form['priority']
+            follow_up_date = request.form.get('follow_up_date') or None
+            title = request.form['title']
+            content = request.form['content']
+
+            new_note = ClientNote(
+                client_id=client_id,
+                note_type=note_type,
+                priority=priority,
+                follow_up_date=follow_up_date,
+                title=title,
+                content=content,
+                created_by=current_user.id
+            )
+
+            db.session.add(new_note)
+            db.session.commit()
+            flash("Client note added successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error saving note: {e}", "danger")
+
+        return redirect(url_for('main.client_notes'))
+
+    # GET: Handle filters
+    note_type = request.args.get('note_type', '')
+    client_id = request.args.get('client_id', '')
+
+    notes_query = ClientNote.query.order_by(ClientNote.created_at.desc())
+
+    if note_type:
+        notes_query = notes_query.filter(ClientNote.note_type == note_type)
+    if client_id:
+        notes_query = notes_query.filter(ClientNote.client_id == int(client_id))
+
+    notes = notes_query.all()
+    clients = Client.query.all()
+
+    return render_template('crm/client_notes.html', notes=notes, clients=clients, note_type=note_type)
+
+
 
 @main_bp.route('/crm/document-checklists')
 @login_required
