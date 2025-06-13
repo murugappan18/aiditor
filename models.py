@@ -287,8 +287,6 @@ class XBRLReport(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
 
-
-
 class ClientNote(db.Model):
     __tablename__ = 'client_notes'
     
@@ -308,7 +306,6 @@ class ClientNote(db.Model):
 
     def __repr__(self):
         return f"<ClientNote(id={self.id}, title={self.title}, client_id={self.client_id})>"
-
 
 class DocumentChecklist(db.Model):
     __tablename__ = 'document_checklists'
@@ -330,6 +327,7 @@ class ReturnTracker(db.Model):
     
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    client = relationship("Client", backref="returns")
     return_type = Column(String(50), nullable=False)  # ITR, GST, TDS, ROC
     period = Column(String(20), nullable=False)  # AY 2023-24, Mar 2024, Q1 FY24
     due_date = Column(Date, nullable=False)
@@ -339,8 +337,6 @@ class ReturnTracker(db.Model):
     remarks = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    client = relationship("Client", backref="returns")
 
 class GSTValidation(db.Model):
     __tablename__ = 'gst_validations'
