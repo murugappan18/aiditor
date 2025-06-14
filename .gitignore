@@ -6,3 +6,6 @@ __pycache__/
 
 # Ignore a specific file in the root directory
 pyvenv.cfg
+
+# Ignore SQLite DB
+*.db

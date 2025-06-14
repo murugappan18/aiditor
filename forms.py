@@ -1,8 +1,11 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, SelectField, TextAreaField, DateField, FloatField, IntegerField, BooleanField, HiddenField
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, PasswordField, SelectField, SubmitField, TextAreaField, DateField, FloatField, IntegerField, BooleanField, HiddenField
 from wtforms.validators import DataRequired, InputRequired, Email, Length, Optional, NumberRange
 from wtforms.widgets import TextArea
+
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
@@ -326,6 +329,36 @@ class XBRLReportForm(FlaskForm):
         ('Filed', 'Filed')
     ], default='Draft')
 
+class ChallanManagementForm(FlaskForm):
+    client_id = SelectField('Client', coerce=int, validators=[DataRequired()])
+    challan_number = StringField('Challan Number', validators=[DataRequired()])
+    challan_type = SelectField('Challan Type', choices=[
+        ('ITNS 281', 'ITNS 281'),
+        ('GST PMT-06', 'GST PMT-06'),
+        ('TDS Payment', 'TDS Payment')
+    ], validators=[DataRequired()])
+    tax_type = SelectField('Tax Type', choices=[
+        ('Income Tax', 'Income Tax'),
+        ('TDS', 'TDS'),
+        ('GST', 'GST')
+    ], validators=[DataRequired()])
+    assessment_year = StringField('Assessment Year', validators=[Optional()])
+    amount = FloatField('Amount', validators=[DataRequired()])
+    payment_date = DateField('Payment Date', format='%Y-%m-%d', validators=[Optional()])
+    bank_name = StringField('Bank Name', validators=[Optional()])
+    bank_branch = StringField('Bank Branch', validators=[Optional()])
+    bsr_code = StringField('BSR Code', validators=[Optional()])
+    serial_number = StringField('Serial Number', validators=[Optional()])
+    status = SelectField('Status', choices=[
+        ('Pending', 'Pending'),
+        ('Cleared', 'Cleared'),
+        ('Failed', 'Failed'),
+        ('Bounced', 'Bounced')
+    ], default='Pending', validators=[DataRequired()])
+    remarks = TextAreaField('Remarks', validators=[Optional()])
+    submit = SubmitField('Save')
+
+
 class SMSTemplateForm(FlaskForm):
     template_id = HiddenField()  # Used for editing
     template_name = StringField('Template Name', validators=[DataRequired(), Length(max=100)])
@@ -345,6 +378,7 @@ class EmailTemplateForm(FlaskForm):
     subject = StringField('Email Subject', validators=[DataRequired(), Length(max=200)])
     content = TextAreaField('Template Content', validators=[DataRequired()])
     is_active = BooleanField('Active', default=True)
+
 
 class InventoryForm(FlaskForm):
     item_id = HiddenField()  # Used for editing

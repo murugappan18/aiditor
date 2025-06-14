@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}New CMA Report - Compliance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">New CMA Report</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('main.cma_reports') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-chart-line me-2"></i>Create CMA Report
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.client_id.label(class="form-label") }}
+                    {{ form.client_id(class="form-select") }}
+                    {% for error in form.client_id.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    {{ form.reporting_period.label(class="form-label") }}
+                    {{ form.reporting_period(class="form-select") }}
+                    {% for error in form.reporting_period.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    {{ form.report_date.label(class="form-label") }}
+                    {{ form.report_date(class="form-control") }}
+                    {% for error in form.report_date.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                {% for field in [
+                    form.working_capital_limit,
+                    form.utilized_amount,
+                    form.cash_credit_limit,
+                    form.overdraft_limit,
+                    form.bill_discounting_limit,
+                    form.letter_of_credit,
+                    form.bank_guarantee,
+                    form.inventory_value,
+                    form.receivables_value
+                ] %}
+                <div class="col-md-6 mb-3">
+                    {{ field.label(class="form-label") }}
+                    {{ field(class="form-control") }}
+                    {% for error in field.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <div class="col-md-6 mb-3">
+                    {{ form.status.label(class="form-label") }}
+                    {{ form.status(class="form-select") }}
+                    {% for error in form.status.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i>Save Report
+            </button>
+            <a href="{{ url_for('main.cma_reports') }}" class="btn btn-secondary">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

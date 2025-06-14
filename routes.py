@@ -798,6 +798,8 @@ def balance_sheet_audits():
     
     return render_template('compliance/balance_sheet_audits.html', audits=audits, search=search)
 
+
+
 @main_bp.route('/balance_sheet_audits/new', methods=['GET', 'POST'])
 @login_required
 def new_balance_sheet_audit():
@@ -898,6 +900,7 @@ def assessment_orders():
     
     return render_template('compliance/assessment_orders.html', orders=orders, search=search)
 
+
 @main_bp.route('/assessment_orders/new', methods=['GET', 'POST'])
 @login_required
 def new_assessment_order():
@@ -930,6 +933,7 @@ def new_assessment_order():
     
     return render_template('compliance/assessment_form.html', form=form, title='New Assessment Order')
 
+
 # XBRL Reports Routes
 @main_bp.route('/xbrl_reports')
 @login_required
@@ -959,14 +963,14 @@ def new_xbrl_report():
     if form.validate_on_submit():
         xbrl_file_path = None
         if form.xbrl_file.data:
-            xbrl_file_path = save_uploaded_file(form.xbrl_file.data, 'xbrl')
-        
+            """ xbrl_file_path = save_uploaded_file(form.xbrl_file.data, 'xbrl') """
+            file_path, file_size = save_uploaded_file(form.xbrl_file.data, 'xbrl')  # ✅ Unpack tuple
         xbrl_report = XBRLReport(
             client_id=form.client_id.data,
             financial_year=form.financial_year.data,
             report_type=form.report_type.data,
             filing_category=form.filing_category.data,
-            xbrl_file_path=xbrl_file_path,
+            xbrl_file_path=file_path,
             validation_status=form.validation_status.data,
             validation_errors=form.validation_errors.data,
             filing_date=form.filing_date.data,
@@ -1045,11 +1049,61 @@ def validate_gst():
                          validation_result=existing, 
                          recent_validations=recent_validations)
 
-@main_bp.route('/smart/challan-management')
+
+@main_bp.route('/smart/challan-management', methods=['GET', 'POST'])
 @login_required
 def challan_management():
-    challans = ChallanManagement.query.order_by(ChallanManagement.created_at.desc()).all()
-    return render_template('smart/challan_management.html', challans=challans)
+    form = ChallanManagementForm()
+
+    query = ChallanManagement.query
+
+    if form.validate_on_submit():
+        if form.status.data:
+            query = query.filter_by(status=form.status.data)
+
+    challans = query.order_by(ChallanManagement.created_at.desc()).all()
+
+    return render_template(
+        'smart/challan_management.html',
+        challans=challans,
+        form=form
+    )
+
+
+@main_bp.route('/smart/challan-management/new', methods=['GET', 'POST'])
+@login_required
+def new_challan():
+    form = ChallanManagementForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+
+    if form.validate_on_submit():
+        challan = ChallanManagement(
+            client_id=form.client_id.data,
+            challan_number=form.challan_number.data,
+            challan_type=form.challan_type.data,
+            tax_type=form.tax_type.data,
+            assessment_year=form.assessment_year.data,
+            amount=form.amount.data,
+            payment_date=form.payment_date.data,
+            bank_name=form.bank_name.data,
+            bank_branch=form.bank_branch.data,
+            bsr_code=form.bsr_code.data,
+            serial_number=form.serial_number.data,
+            status=form.status.data,
+            remarks=form.remarks.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(challan)
+        db.session.commit()
+        flash("Challan created successfully!", "success")
+        return redirect(url_for('main.challan_management'))
+
+    return render_template('smart/challan_form.html', form=form, title='New Challan')
+
+
+
+
 
 @main_bp.route('/smart/return-tracker')
 @login_required
@@ -1191,12 +1245,129 @@ def client_notes():
     return render_template('crm/client_notes.html', notes=notes, clients=clients, note_type=note_type)
 
 
+import json
 
+# Utility functions
+def get_service_color(service):
+    return {
+        'ITR Filing': 'primary',
+        'Audit': 'info',
+        'GST Returns': 'warning',
+        'ROC Compliance': 'success'
+    }.get(service, 'secondary')
+
+def get_progress_color(progress):
+    if progress >= 90:
+        return 'success'
+    elif progress >= 60:
+        return 'warning'
+    elif progress > 0:
+        return 'danger'
+    return 'secondary'
+
+def get_status_color(status):
+    return {
+        'Complete': 'success',
+        'In Progress': 'warning',
+        'Overdue': 'danger'
+    }.get(status, 'secondary')
+
+def get_actions(status):
+    if status == 'Complete':
+        return [
+            {'icon': 'eye', 'color': 'primary', 'tooltip': 'View Details'},
+            {'icon': 'download', 'color': 'secondary', 'tooltip': 'Download Report'}
+        ]
+    elif status == 'In Progress':
+        return [
+            {'icon': 'eye', 'color': 'primary', 'tooltip': 'View Details'},
+            {'icon': 'check', 'color': 'success', 'tooltip': 'Mark Complete'},
+            {'icon': 'bell', 'color': 'info', 'tooltip': 'Send Reminder'}
+        ]
+    elif status == 'Overdue':
+        return [
+            {'icon': 'eye', 'color': 'primary', 'tooltip': 'View Details'},
+            {'icon': 'phone', 'color': 'danger', 'tooltip': 'Urgent Follow Up'}
+        ]
+    return []
+
+# View Route
 @main_bp.route('/crm/document-checklists')
 @login_required
 def document_checklists():
-    checklists = DocumentChecklist.query.order_by(DocumentChecklist.due_date).all()
-    return render_template('crm/document_checklists.html', checklists=checklists)
+    raw_checklists = DocumentChecklist.query.order_by(DocumentChecklist.due_date).all()
+    clients = Client.query.order_by(Client.name).all()
+
+    checklists = []
+    for c in raw_checklists:
+        # Safely parse JSON fields
+        required_docs = json.loads(c.documents_required or "[]")
+        received_docs = json.loads(c.documents_received or "[]")
+        total = len(required_docs)
+        received = len(received_docs)
+        progress = int((received / total) * 100) if total else 0
+
+        checklist = {
+            'client': c.client.name if c.client else 'N/A',
+            'description': c.checklist_name,
+            'service': c.service_type,
+            'service_color': get_service_color(c.service_type),
+            'due_date': c.due_date.strftime('%d-%m-%Y') if c.due_date else 'N/A',
+            'overdue': c.due_date < date.today() and progress < 100 if c.due_date else False,
+            'progress': progress,
+            'progress_color': get_progress_color(progress),
+            'received': received,
+            'total': total,
+            'status': c.status,
+            'status_color': get_status_color(c.status),
+            'actions': get_actions(c.status)
+        }
+
+        checklists.append(checklist)
+
+    return render_template('crm/document_checklists.html', checklists=checklists, clients=clients)
+
+# Form Submission Route
+@main_bp.route('/create_checklist', methods=['POST'])
+@login_required
+def create_checklist():
+    try:
+        form = request.form
+
+        client_id = int(form.get("client"))
+        checklist_name = form.get("description")
+        service_type = form.get("service")
+        due_date = datetime.strptime(form.get("due_date"), "%Y-%m-%d").date()
+        documents = request.form.getlist("documents")
+        custom_docs = request.form.getlist("custom_docs")
+
+        # Combine and store required documents
+        document_list = documents + custom_docs
+        received_docs = []  # Empty initially
+
+        new_checklist = DocumentChecklist(
+            client_id=client_id,
+            checklist_name=checklist_name,
+            service_type=service_type,
+            documents_required=json.dumps(document_list),
+            documents_received=json.dumps(received_docs),
+            completion_percentage=0,
+            due_date=due_date,
+            status="Pending",
+            created_by=current_user.id
+        )
+
+        db.session.add(new_checklist)
+        db.session.commit()
+
+        flash("Checklist created successfully!", "success")
+        return redirect(url_for("main.document_checklists"))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error creating checklist: {e}", "danger")
+        return redirect(url_for("main.document_checklists"))
+
 
 @main_bp.route('/crm/communications')
 @login_required

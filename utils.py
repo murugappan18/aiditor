@@ -8,8 +8,8 @@ ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png',
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def save_uploaded_file(file):
-    """Save uploaded file and return file path and size"""
+""" def save_uploaded_file(file):
+    '''Save uploaded file and return file path and size'''
     if file and allowed_file(file.filename):
         # Create uploads directory if it doesn't exist
         upload_dir = os.path.join(current_app.root_path, 'uploads')
@@ -29,6 +29,25 @@ def save_uploaded_file(file):
         
         return file_path, file_size
     
+    return None, None """
+
+def save_uploaded_file(file, subfolder=''):
+    """Save uploaded file into a subfolder and return file path and size"""
+    if file and allowed_file(file.filename):
+        # Build upload directory with optional subfolder
+        upload_dir = os.path.join(current_app.root_path, 'uploads', subfolder)
+        os.makedirs(upload_dir, exist_ok=True)
+
+        filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"{name}_{uuid.uuid4().hex[:8]}{ext}"
+
+        file_path = os.path.join(upload_dir, unique_filename)
+        file.save(file_path)
+
+        file_size = os.path.getsize(file_path)
+        return file_path, file_size
+
     return None, None
 
 def format_currency(amount):
