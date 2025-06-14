@@ -707,6 +707,8 @@ def balance_sheet_audits():
     
     return render_template('compliance/balance_sheet_audits.html', audits=audits, search=search)
 
+
+
 @main_bp.route('/balance_sheet_audits/new', methods=['GET', 'POST'])
 @login_required
 def new_balance_sheet_audit():
@@ -807,6 +809,7 @@ def assessment_orders():
     
     return render_template('compliance/assessment_orders.html', orders=orders, search=search)
 
+
 @main_bp.route('/assessment_orders/new', methods=['GET', 'POST'])
 @login_required
 def new_assessment_order():
@@ -839,6 +842,7 @@ def new_assessment_order():
     
     return render_template('compliance/assessment_form.html', form=form, title='New Assessment Order')
 
+
 # XBRL Reports Routes
 @main_bp.route('/xbrl_reports')
 @login_required
@@ -868,14 +872,14 @@ def new_xbrl_report():
     if form.validate_on_submit():
         xbrl_file_path = None
         if form.xbrl_file.data:
-            xbrl_file_path = save_uploaded_file(form.xbrl_file.data, 'xbrl')
-        
+            """ xbrl_file_path = save_uploaded_file(form.xbrl_file.data, 'xbrl') """
+            file_path, file_size = save_uploaded_file(form.xbrl_file.data, 'xbrl')  # ✅ Unpack tuple
         xbrl_report = XBRLReport(
             client_id=form.client_id.data,
             financial_year=form.financial_year.data,
             report_type=form.report_type.data,
             filing_category=form.filing_category.data,
-            xbrl_file_path=xbrl_file_path,
+            xbrl_file_path=file_path,
             validation_status=form.validation_status.data,
             validation_errors=form.validation_errors.data,
             filing_date=form.filing_date.data,
@@ -954,11 +958,61 @@ def validate_gst():
                          validation_result=existing, 
                          recent_validations=recent_validations)
 
-@main_bp.route('/smart/challan-management')
+
+@main_bp.route('/smart/challan-management', methods=['GET', 'POST'])
 @login_required
 def challan_management():
-    challans = ChallanManagement.query.order_by(ChallanManagement.created_at.desc()).all()
-    return render_template('smart/challan_management.html', challans=challans)
+    form = ChallanManagementForm()
+
+    query = ChallanManagement.query
+
+    if form.validate_on_submit():
+        if form.status.data:
+            query = query.filter_by(status=form.status.data)
+
+    challans = query.order_by(ChallanManagement.created_at.desc()).all()
+
+    return render_template(
+        'smart/challan_management.html',
+        challans=challans,
+        form=form
+    )
+
+
+@main_bp.route('/smart/challan-management/new', methods=['GET', 'POST'])
+@login_required
+def new_challan():
+    form = ChallanManagementForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+
+    if form.validate_on_submit():
+        challan = ChallanManagement(
+            client_id=form.client_id.data,
+            challan_number=form.challan_number.data,
+            challan_type=form.challan_type.data,
+            tax_type=form.tax_type.data,
+            assessment_year=form.assessment_year.data,
+            amount=form.amount.data,
+            payment_date=form.payment_date.data,
+            bank_name=form.bank_name.data,
+            bank_branch=form.bank_branch.data,
+            bsr_code=form.bsr_code.data,
+            serial_number=form.serial_number.data,
+            status=form.status.data,
+            remarks=form.remarks.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(challan)
+        db.session.commit()
+        flash("Challan created successfully!", "success")
+        return redirect(url_for('main.challan_management'))
+
+    return render_template('smart/challan_form.html', form=form, title='New Challan')
+
+
+
+
 
 @main_bp.route('/smart/return-tracker')
 @login_required

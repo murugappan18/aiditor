@@ -14,74 +14,65 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-balance-scale me-2"></i>Audit Reports
-        </h5>
-    </div>
-    <div class="card-body">
-        {% if audits.items %}
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Client</th>
-                        <th>Financial Year</th>
-                        <th>Audit Type</th>
-                        <th>Auditor</th>
-                        <th>Opinion</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for audit in audits.items %}
-                    <tr>
-                        <td>{{ audit.client.name }}</td>
-                        <td>{{ audit.financial_year }}</td>
-                        <td><span class="badge bg-info">{{ audit.audit_type }}</span></td>
-                        <td>{{ audit.auditor_name or '-' }}</td>
-                        <td>
-                            {% if audit.opinion_type == 'Unqualified' %}
-                                <span class="badge bg-success">{{ audit.opinion_type }}</span>
-                            {% elif audit.opinion_type == 'Qualified' %}
-                                <span class="badge bg-warning">{{ audit.opinion_type }}</span>
-                            {% elif audit.opinion_type %}
-                                <span class="badge bg-danger">{{ audit.opinion_type }}</span>
-                            {% else %}
-                                <span class="text-muted">Pending</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if audit.status == 'In Progress' %}
-                                <span class="badge bg-warning">{{ audit.status }}</span>
-                            {% elif audit.status == 'Completed' %}
-                                <span class="badge bg-success">{{ audit.status }}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-balance-scale me-2"></i>Audit Reports
+            </h5>
         </div>
-        {% else %}
-        <div class="empty-state">
-            <i class="fas fa-balance-scale"></i>
-            <h4>No Audit Reports Found</h4>
-            <p class="text-muted">Start by adding your first audit report.</p>
-            <a href="{{ url_for('main.new_balance_sheet_audit') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i>Add Audit Report
-            </a>
+        <div class="card-body">
+            {% if audits.items %}
+            <div class="table-responsive">
+                <table class="table table-striped" id="auditTable">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Report Type</th>
+                            <th>Financial Year</th>
+                            <th>Report Date</th>
+                            <th>Status</th>
+                            <th>Findings</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for audit in audits.items %}
+                            <tr>
+                                <td>{{ audit.client.name }}</td>
+                                <td>{{ audit.audit_type }}</td>
+                                <td>{{ audit.financial_year }}</td>
+                                <td>{{ audit.balance_sheet_date.strftime('%Y-%m-%d') if audit.balance_sheet_date else '' }}</td>
+                                <td>{{ audit.status }}</td>
+                                <td>{{ audit.key_audit_matters[:30] }}...</td>
+                                <td>
+                                    <a href="{{ url_for('main.view_audit', audit_id=audit.id) }}" class="btn btn-sm btn-info">View</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-balance-scale"></i>
+                <h4>No Audit Reports Found</h4>
+                <p class="text-muted">Start by adding your first audit report.</p>
+                <a href="{{ url_for('main.new_balance_sheet_audit') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add Audit Report
+                </a>
+            </div>
+            {% endif %}
+
         </div>
-        {% endif %}
     </div>
-</div>
+{% endblock %}
+
+
+
+{% block scripts %}
+    <script>
+        $(document).ready(function() {
+            $('#auditTable').DataTable();
+        });
+    </script>
 {% endblock %}

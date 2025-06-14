@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, SelectField, TextAreaField, DateField, FloatField, IntegerField, BooleanField
+from wtforms import StringField, PasswordField, SelectField, SubmitField, TextAreaField, DateField, FloatField, IntegerField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from wtforms.widgets import TextArea
 
@@ -325,3 +325,35 @@ class XBRLReportForm(FlaskForm):
         ('Validated', 'Validated'),
         ('Filed', 'Filed')
     ], default='Draft')
+
+
+
+class ChallanManagementForm(FlaskForm):
+    client_id = SelectField('Client', coerce=int, validators=[DataRequired()])
+    challan_number = StringField('Challan Number', validators=[DataRequired()])
+    challan_type = SelectField('Challan Type', choices=[
+        ('ITNS 281', 'ITNS 281'),
+        ('GST PMT-06', 'GST PMT-06'),
+        ('TDS Payment', 'TDS Payment')
+    ], validators=[DataRequired()])
+    tax_type = SelectField('Tax Type', choices=[
+        ('Income Tax', 'Income Tax'),
+        ('TDS', 'TDS'),
+        ('GST', 'GST')
+    ], validators=[DataRequired()])
+    assessment_year = StringField('Assessment Year', validators=[Optional()])
+    amount = FloatField('Amount', validators=[DataRequired()])
+    payment_date = DateField('Payment Date', format='%Y-%m-%d', validators=[Optional()])
+    bank_name = StringField('Bank Name', validators=[Optional()])
+    bank_branch = StringField('Bank Branch', validators=[Optional()])
+    bsr_code = StringField('BSR Code', validators=[Optional()])
+    serial_number = StringField('Serial Number', validators=[Optional()])
+    status = SelectField('Status', choices=[
+        ('Pending', 'Pending'),
+        ('Cleared', 'Cleared'),
+        ('Failed', 'Failed'),
+        ('Bounced', 'Bounced')
+    ], default='Pending', validators=[DataRequired()])
+    remarks = TextAreaField('Remarks', validators=[Optional()])
+    submit = SubmitField('Save')
+    

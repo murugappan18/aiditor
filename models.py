@@ -49,6 +49,7 @@ class Client(db.Model):
     gst_returns = relationship('GSTReturn', backref='client', lazy='dynamic')
     documents = relationship('Document', backref='client', lazy='dynamic')
     outstanding_fees = relationship('OutstandingFee', backref='client', lazy='dynamic')
+    cma_reports = relationship('CMAReport', backref='client', lazy='dynamic')
 
 class IncomeTaxReturn(db.Model):
     __tablename__ = 'income_tax_returns'
@@ -213,7 +214,7 @@ class SFTReturn(db.Model):
 
 class BalanceSheetAudit(db.Model):
     __tablename__ = 'balance_sheet_audits'
-    
+    client = relationship('Client', backref='audits')
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
     financial_year = Column(String(10), nullable=False)
@@ -228,12 +229,20 @@ class BalanceSheetAudit(db.Model):
     status = Column(String(20), default='In Progress')
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
+    
+      
+
+
+
 
 class CMAReport(db.Model):
     __tablename__ = 'cma_reports'
     
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+
+    
+
     reporting_period = Column(String(20), nullable=False)  # Monthly, Quarterly, Annual
     report_date = Column(Date)
     working_capital_limit = Column(Float, default=0)
@@ -254,6 +263,7 @@ class AssessmentOrder(db.Model):
     
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    client = db.relationship('Client', backref='assessment_orders') 
     assessment_year = Column(String(10), nullable=False)
     order_type = Column(String(50))  # Scrutiny, Best Judgment, Ex-parte
     order_date = Column(Date)
@@ -275,6 +285,8 @@ class XBRLReport(db.Model):
     
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    client = db.relationship('Client', backref='xbrl_reports')
+
     financial_year = Column(String(10), nullable=False)
     report_type = Column(String(50))  # Balance Sheet, P&L, Cash Flow
     filing_category = Column(String(50))  # Individual, Company, LLP
@@ -378,6 +390,7 @@ class ChallanManagement(db.Model):
     remarks = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
+    client = db.relationship('Client', backref='challans')
 
 class SMSTemplate(db.Model):
     __tablename__ = 'sms_templates'
