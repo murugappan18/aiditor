@@ -299,8 +299,6 @@ class XBRLReport(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
 
-
-
 class ClientNote(db.Model):
     __tablename__ = 'client_notes'
     
@@ -321,7 +319,6 @@ class ClientNote(db.Model):
     def __repr__(self):
         return f"<ClientNote(id={self.id}, title={self.title}, client_id={self.client_id})>"
 
-
 class DocumentChecklist(db.Model):
     __tablename__ = 'document_checklists'
     
@@ -337,11 +334,14 @@ class DocumentChecklist(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
 
+    client = db.relationship('Client', backref='document_checklists')
+
 class ReturnTracker(db.Model):
     __tablename__ = 'return_tracker'
     
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    client = relationship("Client", backref="returns")
     return_type = Column(String(50), nullable=False)  # ITR, GST, TDS, ROC
     period = Column(String(20), nullable=False)  # AY 2023-24, Mar 2024, Q1 FY24
     due_date = Column(Date, nullable=False)
@@ -351,8 +351,6 @@ class ReturnTracker(db.Model):
     remarks = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    client = relationship("Client", backref="returns")
 
 class GSTValidation(db.Model):
     __tablename__ = 'gst_validations'
@@ -397,7 +395,7 @@ class SMSTemplate(db.Model):
     
     id = Column(Integer, primary_key=True)
     template_name = Column(String(100), nullable=False)
-    template_type = Column(String(50))  # Reminder, Birthday, Payment, General
+    template_type = Column(String(50))  # sms, email
     content = Column(Text, nullable=False)
     variables = Column(String(500))  # JSON list of variables like {client_name}, {due_date}
     is_active = Column(Boolean, default=True)
@@ -409,7 +407,7 @@ class EmailTemplate(db.Model):
     
     id = Column(Integer, primary_key=True)
     template_name = Column(String(100), nullable=False)
-    template_type = Column(String(50))  # Reminder, Birthday, Payment, General
+    template_type = Column(String(50))  # sms, email
     subject = Column(String(200), nullable=False)
     content = Column(Text, nullable=False)
     variables = Column(String(500))  # JSON list of variables
@@ -443,5 +441,33 @@ class Reminder(db.Model):
     status = Column(String(20), default='Active')  # Active, Completed, Cancelled
     auto_created = Column(Boolean, default=False)  # System generated vs manual
     notification_sent = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey('users.id'))
+
+class AutoReminderSetting(db.Model):
+    __tablename__ = 'auto_reminder_settings'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    itr = Column(Boolean, default=True)
+    gst = Column(Boolean, default=True)
+    birthday = Column(Boolean, default=True)
+    fees = Column(Boolean, default=True)
+
+class InventoryItems(db.Model):
+    __tablename__ = 'inventory_items'
+    
+    id = Column(Integer, primary_key=True)
+    item_name = Column(String(200), nullable=False)
+    item_code = Column(String(50), unique=True, nullable=False)
+    description = Column(Text)
+    unit = Column(String(50), default='pcs')
+    unit_price = Column(Float, default=0.0)
+    total_value = Column(Float, default=0.0)
+    current_stock = Column(Integer, default=0)
+    minimum_stock = Column(Integer, default=0)
+    location = Column(String(200), default='Not Specified')
+    category = Column(String(100), default='Others')
+    status = Column(String(20), default='Not Available')
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))

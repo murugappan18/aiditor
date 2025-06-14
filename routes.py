@@ -542,8 +542,6 @@ def complete_reminder(id):
     flash('Reminder marked as completed!', 'success')
     return redirect(url_for('main.reminders'))
 
-
-
 @main_bp.route('/follow_ups')
 @login_required
 def follow_ups():
@@ -560,7 +558,62 @@ def follow_ups():
 @main_bp.route('/inventory')
 @login_required
 def inventory():
-    return render_template('erp/inventory.html')
+    form = InventoryForm()
+    items = InventoryItems.query.all()
+
+    # Calculate dynamic stats
+    total_items = len(items)
+    low_stock = InventoryItems.query.filter(InventoryItems.current_stock < InventoryItems.minimum_stock).count()
+    total_value = db.session.query(func.sum(InventoryItems.total_value)).scalar() or 0.0
+    categories_count = len(form.category.choices) or 0
+
+    return render_template('erp/inventory.html',
+                           items=items,
+                           total_items=total_items,
+                           low_stock=low_stock,
+                           total_value=total_value,
+                           categories_count=categories_count,
+                           form=form)
+
+@main_bp.route('/inventory/new', methods=['POST'])
+@login_required
+def new_inventory_item():
+    form = InventoryForm()
+    
+    if form.validate_on_submit():
+        status='Not Available'
+        total_value=0.0
+        if form.current_stock.data <= 0:
+            status='Out of Stock'
+        elif form.current_stock.data < form.minimum_stock.data:
+            status='Low Stock'
+        elif form.current_stock.data >= form.minimum_stock.data:
+            status='In Stock'
+        if(form.unit_price.data and form.current_stock.data):
+            total_value = round(form.unit_price.data * form.current_stock.data, 2)
+        item = InventoryItems(
+            item_name=form.item_name.data,
+            item_code=form.item_code.data,
+            description=form.description.data,
+            unit=form.unit.data,
+            unit_price=form.unit_price.data or 0.0,
+            total_value=total_value or 0.0,
+            current_stock=form.current_stock.data or 0,
+            minimum_stock=form.minimum_stock.data or 0,
+            location=form.location.data,
+            category=form.category.data,
+            status=status,
+            created_at=datetime.now(),
+            created_by=current_user.id
+        )
+        
+        db.session.add(item)
+        db.session.commit()
+        flash('Inventory item created successfully!', 'success')
+        return redirect(url_for('main.inventory'))
+    
+    flash('Error when Creating New Inventory Item!', 'danger')
+    return render_template('erp/inventory.html', form=form, title='New Inventory Item')
 
 @main_bp.route('/analytics')
 @login_required
@@ -1154,20 +1207,288 @@ def client_notes():
     return render_template('crm/client_notes.html', notes=notes, clients=clients, note_type=note_type)
 
 
+import json
 
+# Utility functions
+def get_service_color(service):
+    return {
+        'ITR Filing': 'primary',
+        'Audit': 'info',
+        'GST Returns': 'warning',
+        'ROC Compliance': 'success'
+    }.get(service, 'secondary')
+
+def get_progress_color(progress):
+    if progress >= 90:
+        return 'success'
+    elif progress >= 60:
+        return 'warning'
+    elif progress > 0:
+        return 'danger'
+    return 'secondary'
+
+def get_status_color(status):
+    return {
+        'Complete': 'success',
+        'In Progress': 'warning',
+        'Overdue': 'danger'
+    }.get(status, 'secondary')
+
+def get_actions(status):
+    if status == 'Complete':
+        return [
+            {'icon': 'eye', 'color': 'primary', 'tooltip': 'View Details'},
+            {'icon': 'download', 'color': 'secondary', 'tooltip': 'Download Report'}
+        ]
+    elif status == 'In Progress':
+        return [
+            {'icon': 'eye', 'color': 'primary', 'tooltip': 'View Details'},
+            {'icon': 'check', 'color': 'success', 'tooltip': 'Mark Complete'},
+            {'icon': 'bell', 'color': 'info', 'tooltip': 'Send Reminder'}
+        ]
+    elif status == 'Overdue':
+        return [
+            {'icon': 'eye', 'color': 'primary', 'tooltip': 'View Details'},
+            {'icon': 'phone', 'color': 'danger', 'tooltip': 'Urgent Follow Up'}
+        ]
+    return []
+
+# View Route
 @main_bp.route('/crm/document-checklists')
 @login_required
 def document_checklists():
-    checklists = DocumentChecklist.query.order_by(DocumentChecklist.due_date).all()
-    return render_template('crm/document_checklists.html', checklists=checklists)
+    raw_checklists = DocumentChecklist.query.order_by(DocumentChecklist.due_date).all()
+    clients = Client.query.order_by(Client.name).all()
+
+    checklists = []
+    for c in raw_checklists:
+        # Safely parse JSON fields
+        required_docs = json.loads(c.documents_required or "[]")
+        received_docs = json.loads(c.documents_received or "[]")
+        total = len(required_docs)
+        received = len(received_docs)
+        progress = int((received / total) * 100) if total else 0
+
+        checklist = {
+            'client': c.client.name if c.client else 'N/A',
+            'description': c.checklist_name,
+            'service': c.service_type,
+            'service_color': get_service_color(c.service_type),
+            'due_date': c.due_date.strftime('%d-%m-%Y') if c.due_date else 'N/A',
+            'overdue': c.due_date < date.today() and progress < 100 if c.due_date else False,
+            'progress': progress,
+            'progress_color': get_progress_color(progress),
+            'received': received,
+            'total': total,
+            'status': c.status,
+            'status_color': get_status_color(c.status),
+            'actions': get_actions(c.status)
+        }
+
+        checklists.append(checklist)
+
+    return render_template('crm/document_checklists.html', checklists=checklists, clients=clients)
+
+# Form Submission Route
+@main_bp.route('/create_checklist', methods=['POST'])
+@login_required
+def create_checklist():
+    try:
+        form = request.form
+
+        client_id = int(form.get("client"))
+        checklist_name = form.get("description")
+        service_type = form.get("service")
+        due_date = datetime.strptime(form.get("due_date"), "%Y-%m-%d").date()
+        documents = request.form.getlist("documents")
+        custom_docs = request.form.getlist("custom_docs")
+
+        # Combine and store required documents
+        document_list = documents + custom_docs
+        received_docs = []  # Empty initially
+
+        new_checklist = DocumentChecklist(
+            client_id=client_id,
+            checklist_name=checklist_name,
+            service_type=service_type,
+            documents_required=json.dumps(document_list),
+            documents_received=json.dumps(received_docs),
+            completion_percentage=0,
+            due_date=due_date,
+            status="Pending",
+            created_by=current_user.id
+        )
+
+        db.session.add(new_checklist)
+        db.session.commit()
+
+        flash("Checklist created successfully!", "success")
+        return redirect(url_for("main.document_checklists"))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error creating checklist: {e}", "danger")
+        return redirect(url_for("main.document_checklists"))
+
 
 @main_bp.route('/crm/communications')
 @login_required
 def communications():
-    logs = CommunicationLog.query.order_by(CommunicationLog.sent_at.desc()).all()
-    templates = SMSTemplate.query.filter_by(is_active=True).all()
-    email_templates = EmailTemplate.query.filter_by(is_active=True).all()
-    return render_template('crm/communications.html', 
-                         logs=logs, 
-                         templates=templates, 
-                         email_templates=email_templates)
+    # Communication Logs
+    logs = CommunicationLog.query.order_by(CommunicationLog.sent_at.desc()).limit(100).all()
+    clients = Client.query.filter_by(status='Active').all()  # assuming a Client model exists
+
+    # Stats
+    current_month = datetime.utcnow().month
+    current_year = datetime.utcnow().year
+    sms_count = CommunicationLog.query.filter(
+        CommunicationLog.communication_type == 'SMS',
+        func.extract('month', CommunicationLog.sent_at) == current_month,
+        func.extract('year', CommunicationLog.sent_at) == current_year
+    ).count()
+
+    email_count = CommunicationLog.query.filter(
+        CommunicationLog.communication_type == 'Email',
+        func.extract('month', CommunicationLog.sent_at) == current_month,
+        func.extract('year', CommunicationLog.sent_at) == current_year
+    ).count()
+
+    auto_reminders = AutoReminderSetting.query.filter_by(user_id=current_user.id).first()
+
+    templates_count = SMSTemplate.query.filter_by(is_active=True).count() + \
+                      EmailTemplate.query.filter_by(is_active=True).count()
+
+    # Load templates
+    sms_templates = SMSTemplate.query.all()
+    email_templates = EmailTemplate.query.all()
+
+    # Simulated configuration statuses (you would fetch these from settings/config DB table)
+    config = {
+        "twilio_status": "NotConfigured",  # or "Configured"
+        "smtp_status": "NotConfigured"
+    }
+
+    smsForm = SMSTemplateForm()
+
+    return render_template('crm/communications.html',
+                           smsForm=smsForm,
+                           logs=logs,
+                           clients=clients,
+                           sms_templates=sms_templates,
+                           email_templates=email_templates,
+                           sms_count=sms_count,
+                           email_count=email_count,
+                           auto_reminders=auto_reminders,
+                           templates_count=templates_count,
+                           config=config)
+
+@main_bp.route('/crm/auto-reminders/update', methods=['POST'])
+@login_required
+def update_auto_reminders():
+    # Fetch existing settings or create new one
+    setting = AutoReminderSetting.query.filter_by(user_id=current_user.id).first()
+    
+    if not setting:
+        setting = AutoReminderSetting(user_id=current_user.id)
+        db.session.add(setting)
+
+    # Update values from checkboxes
+    setting.itr = bool(request.form.get('autoITR'))
+    setting.gst = bool(request.form.get('autoGST'))
+    setting.birthday = bool(request.form.get('autoBirthday'))
+    setting.fees = bool(request.form.get('autoFees'))
+
+    db.session.commit()
+    flash('Auto reminder settings updated successfully.', 'success')
+    return redirect(url_for('main.communications'))
+
+@main_bp.route('/crm/templates/add', methods=['POST'])
+@login_required
+def add_template():
+    sms_form = SMSTemplateForm()
+    email_form = EmailTemplateForm()
+
+    if request.form.get('template_type') == 'email':
+        form = email_form
+    else:
+        form = sms_form
+
+    if form.validate_on_submit():
+        is_active = form.is_active.data
+        created_by = current_user.id
+
+        if request.form.get('template_type') == 'email':
+            template = EmailTemplate(
+                template_name=form.template_name.data,
+                template_type=form.template_type.data,
+                subject=form.subject.data,
+                content=form.content.data,
+                is_active=is_active,
+                created_by=created_by
+            )
+        else:
+            template = SMSTemplate(
+                template_name=form.template_name.data,
+                template_type=form.template_type.data,
+                content=form.content.data,
+                is_active=is_active,
+                created_by=created_by
+            )
+
+        db.session.add(template)
+        db.session.commit()
+        flash('Template added successfully!', 'success')
+    else:
+        flash('Form validation failed. Please check your input.', 'danger')
+
+    return redirect(url_for('main.communications'))
+
+@main_bp.route('/crm/template/edit', methods=['POST'])
+@login_required
+def edit_template():
+    template_type = request.form.get('template_type')
+    
+    if template_type == 'email':
+        form = EmailTemplateForm()
+        template = EmailTemplate.query.get(request.form.get('template_id'))
+    else:
+        form = SMSTemplateForm()
+        template = SMSTemplate.query.get(request.form.get('template_id'))
+
+    print(request.form.get('template_id'), request.form.get('template_type'))
+
+    if template and form.validate_on_submit():
+        template.template_name = form.template_name.data
+        template.template_type = form.template_type.data
+        template.content = form.content.data
+        template.is_active = form.is_active.data
+
+        if template_type == 'email':
+            template.subject = form.subject.data
+
+        db.session.commit()
+        flash('Template updated successfully!', 'success')
+    else:
+        flash('Template not found or validation failed.', 'danger')
+
+    return redirect(url_for('main.communications'))
+
+@main_bp.route('/crm/template/delete', methods=['POST'])
+@login_required
+def delete_template():
+    template_type = request.form.get('template_type')
+    template_id = request.form.get('template_id')
+
+    if template_type == 'sms':
+        template = SMSTemplate.query.get(template_id)
+    else:
+        template = EmailTemplate.query.get(template_id)
+
+    if template:
+        db.session.delete(template)
+        db.session.commit()
+        flash('Template deleted successfully.', 'success')
+    else:
+        flash('Template not found.', 'danger')
+
+    return redirect(url_for('main.communications'))

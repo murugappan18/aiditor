@@ -1,8 +1,11 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, SelectField, SubmitField, TextAreaField, DateField, FloatField, IntegerField, BooleanField
-from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, PasswordField, SelectField, SubmitField, TextAreaField, DateField, FloatField, IntegerField, BooleanField, HiddenField
+from wtforms.validators import DataRequired, InputRequired, Email, Length, Optional, NumberRange
 from wtforms.widgets import TextArea
+
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
@@ -326,8 +329,6 @@ class XBRLReportForm(FlaskForm):
         ('Filed', 'Filed')
     ], default='Draft')
 
-
-
 class ChallanManagementForm(FlaskForm):
     client_id = SelectField('Client', coerce=int, validators=[DataRequired()])
     challan_number = StringField('Challan Number', validators=[DataRequired()])
@@ -356,4 +357,53 @@ class ChallanManagementForm(FlaskForm):
     ], default='Pending', validators=[DataRequired()])
     remarks = TextAreaField('Remarks', validators=[Optional()])
     submit = SubmitField('Save')
-    
+
+
+class SMSTemplateForm(FlaskForm):
+    template_id = HiddenField()  # Used for editing
+    template_name = StringField('Template Name', validators=[DataRequired(), Length(max=100)])
+    template_type = SelectField('Template Type', choices=[
+        ('sms', 'sms')
+    ])
+    content = TextAreaField('Template Content', validators=[DataRequired()])
+    is_active = BooleanField('Active', default=True)
+
+
+class EmailTemplateForm(FlaskForm):
+    template_id = HiddenField()
+    template_name = StringField('Template Name', validators=[DataRequired(), Length(max=100)])
+    template_type = SelectField('Template Type', choices=[
+        ('email', 'email')
+    ])
+    subject = StringField('Email Subject', validators=[DataRequired(), Length(max=200)])
+    content = TextAreaField('Template Content', validators=[DataRequired()])
+    is_active = BooleanField('Active', default=True)
+
+
+class InventoryForm(FlaskForm):
+    item_id = HiddenField()  # Used for editing
+    item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])
+    item_code = StringField('Item Code', validators=[Optional(), Length(max=50)])
+    description = TextAreaField('Description', validators=[Optional()])
+    unit = SelectField('Unit', choices=[
+        ('pcs', 'Pieces'),
+        ('kg', 'Kilograms'),
+        ('ltr', 'Liters'),
+        ('mtr', 'Meters'),
+        ('box', 'Box'),
+        ('set', 'Set'),
+        ('other', 'Other')
+    ], validators=[DataRequired()], default='pcs')
+    unit_price = FloatField('Unit Price', validators=[InputRequired(), NumberRange(min=0)])
+    current_stock = IntegerField('Current Stock', validators=[InputRequired(), NumberRange(min=0)])
+    minimum_stock = IntegerField('Minimum Stock', validators=[InputRequired(), NumberRange(min=0)])
+    location = StringField('Location', validators=[Optional(), Length(max=100)])
+    category = SelectField('Category', choices=[
+        ('Office Supplies', 'Office Supplies'),
+        ('Furniture', 'Furniture'),
+        ('Computers & IT', 'Computers & IT'),
+        ('Software', 'Software'),
+        ('Hardware', 'Hardware'),
+        ('Stationery', 'Stationery'),
+        ('Others', 'Others')
+    ], validators=[DataRequired()], default='Others')
