@@ -15,6 +15,7 @@
 </div>
 
 <div class="row mb-4">
+    <!-- Dashboard Cards -->
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
@@ -57,26 +58,22 @@
     <div class="card-header">
         <div class="row align-items-center">
             <div class="col">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-list-check me-2"></i>Client Document Checklists
-                </h5>
+                <h5 class="card-title mb-0"><i class="fas fa-list-check me-2"></i>Client Document Checklists</h5>
             </div>
             <div class="col-auto">
-                <div class="input-group">
-                    <select class="form-select form-select-sm">
-                        <option>All Services</option>
-                        <option>ITR Filing</option>
-                        <option>GST Returns</option>
-                        <option>Audit</option>
-                        <option>ROC Compliance</option>
-                    </select>
-                </div>
+                <select class="form-select form-select-sm" id="serviceFilter">
+                    <option value="All Services">All Services</option>
+                    <option value="ITR Filing">ITR Filing</option>
+                    <option value="GST Returns">GST Returns</option>
+                    <option value="Audit">Audit</option>
+                    <option value="ROC Compliance">ROC Compliance</option>
+                </select>
             </div>
         </div>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped" id="checklistTable">
                 <thead>
                     <tr>
                         <th>Client</th>
@@ -88,241 +85,205 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>
-                            <strong>ABC Company Ltd</strong><br>
-                            <small class="text-muted">ITR-6 Filing AY 2023-24</small>
-                        </td>
-                        <td><span class="badge bg-primary">ITR Filing</span></td>
-                        <td>30-09-2024</td>
+                    {% for checklist in checklists %}
+                    <tr data-service="{{ checklist.service }}">
+                        <td><strong>{{ checklist.client }}</strong><br><small class="text-muted">{{ checklist.description }}</small></td>
+                        <td><span class="badge bg-{{ checklist.service_color }}">{{ checklist.service }}</span></td>
+                        <td class="{% if checklist.overdue %}text-danger{% endif %}">{{ checklist.due_date }}</td>
                         <td>
                             <div class="progress" style="height: 20px;">
-                                <div class="progress-bar bg-success" style="width: 85%">85%</div>
+                                <div class="progress-bar bg-{{ checklist.progress_color }}" style="width: {{ checklist.progress }}%">{{ checklist.progress }}%</div>
                             </div>
-                            <small class="text-muted">17/20 documents received</small>
+                            <small class="text-muted">{{ checklist.received }}/{{ checklist.total }} documents received</small>
                         </td>
-                        <td><span class="badge bg-warning">In Progress</span></td>
+                        <td><span class="badge bg-{{ checklist.status_color }}">{{ checklist.status }}</span></td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary btn-sm" title="View Details">
-                                    <i class="fas fa-eye"></i>
+                                {% for action in checklist.actions %}
+                                <button class="btn btn-outline-{{ action.color }} btn-sm" title="{{ action.tooltip }}">
+                                    <i class="fas fa-{{ action.icon }}"></i>
                                 </button>
-                                <button class="btn btn-outline-success btn-sm" title="Mark Complete">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-outline-info btn-sm" title="Send Reminder">
-                                    <i class="fas fa-bell"></i>
-                                </button>
+                                {% endfor %}
                             </div>
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            <strong>XYZ Pvt Ltd</strong><br>
-                            <small class="text-muted">Statutory Audit FY 2023-24</small>
-                        </td>
-                        <td><span class="badge bg-info">Audit</span></td>
-                        <td>15-08-2024</td>
-                        <td>
-                            <div class="progress" style="height: 20px;">
-                                <div class="progress-bar bg-success" style="width: 100%">100%</div>
-                            </div>
-                            <small class="text-muted">25/25 documents received</small>
-                        </td>
-                        <td><span class="badge bg-success">Complete</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary btn-sm" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-outline-secondary btn-sm" title="Download Report">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <strong>DEF Industries</strong><br>
-                            <small class="text-muted">GST Annual Return GSTR-9</small>
-                        </td>
-                        <td><span class="badge bg-warning">GST Returns</span></td>
-                        <td class="text-danger">31-12-2024</td>
-                        <td>
-                            <div class="progress" style="height: 20px;">
-                                <div class="progress-bar bg-warning" style="width: 60%">60%</div>
-                            </div>
-                            <small class="text-muted">9/15 documents received</small>
-                        </td>
-                        <td><span class="badge bg-warning">In Progress</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary btn-sm" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" title="Follow Up">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <strong>PQR Corp</strong><br>
-                            <small class="text-muted">ROC Annual Filing</small>
-                        </td>
-                        <td><span class="badge bg-success">ROC Compliance</span></td>
-                        <td>30-09-2024</td>
-                        <td>
-                            <div class="progress" style="height: 20px;">
-                                <div class="progress-bar bg-danger" style="width: 30%">30%</div>
-                            </div>
-                            <small class="text-muted">6/20 documents received</small>
-                        </td>
-                        <td><span class="badge bg-danger">Overdue</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary btn-sm" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" title="Urgent Follow Up">
-                                    <i class="fas fa-phone"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
+            <div id="noChecklistMessage" class="text-center text-muted" style="display: none;">
+                <p class="mt-3">No Checklist with the mentioned type is Found!!</p>
+            </div>
         </div>
     </div>
 </div>
+
+
+
 
 <!-- New Checklist Modal -->
 <div class="modal fade" id="newChecklistModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Create Document Checklist</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form>
+            <form method="POST" action="{{ url_for('main.create_checklist') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Document Checklist</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Client</label>
-                                <select class="form-select" required>
+                                <select class="form-select" name="client" required>
                                     <option value="">Select Client</option>
-                                    <option>ABC Company Ltd</option>
-                                    <option>XYZ Pvt Ltd</option>
-                                    <option>DEF Industries</option>
-                                    <option>PQR Corp</option>
+                                    <option value="1">DAC</option>
+                                    <option value="2">ABC</option>
+                                    <!-- {% for client in clients %}
+                                    <option value="{{ client.id }}">{{ client.name }}</option>
+                                    {% endfor %} -->
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Service Type</label>
-                                <select class="form-select" id="serviceType" required>
+                                <select class="form-select" name="service" id="serviceType" required>
                                     <option value="">Select Service</option>
-                                    <option value="itr">ITR Filing</option>
-                                    <option value="gst">GST Returns</option>
-                                    <option value="audit">Statutory Audit</option>
-                                    <option value="roc">ROC Compliance</option>
-                                    <option value="custom">Custom Checklist</option>
+                                    <option value="ITR Filing">ITR Filing</option>
+                                    <option value="GST Returns">GST Returns</option>
+                                    <option value="Statutory Audit">Statutory Audit</option>
+                                    <option value="ROC Compliance">ROC Compliance</option>
+                                    <option value="Custom Checklist">Custom Checklist</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Checklist Name</label>
-                                <input type="text" class="form-control" placeholder="e.g., ITR-6 Filing AY 2023-24" required>
+                                <input type="text" class="form-control" name="description" placeholder="e.g., ITR-6 Filing AY 2023-24" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Due Date</label>
-                                <input type="date" class="form-control" required>
+                                <input type="date" class="form-control" name="due_date" required>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label class="form-label">Required Documents</label>
-                        <div id="documentList">
-                            <!-- Documents will be populated based on service type -->
-                        </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addCustomDocument()">
-                            <i class="fas fa-plus me-1"></i>Add Custom Document
-                        </button>
+                        <label class="form-label">Documents</label>
+                        <div id="documentList" class="ps-2"></div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Create Checklist</button>
-            </div>
+
+                    <div id="customDocBtn" class="text-start mb-3" style="display: none;">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addCustomDocument()">+ Add Custom Document</button>
+                    </div>
+
+                    <input type="hidden" name="total" value="20">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Checklist</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Document Templates -->
+<!-- Document Templates (Hidden) -->
 <div id="documentTemplates" style="display: none;">
     <div class="itr-documents">
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Form 16/16A</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Bank Statements</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Investment Proofs (80C)</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">House Rent Receipts</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Capital Gains Statements</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Interest Certificates</label></div>
+        {% for doc in ["Form 16/16A", "Bank Statements", "Investment Proofs (80C)", "House Rent Receipts", "Capital Gains Statements", "Interest Certificates"] %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" checked name="documents" value="{{ doc }}">
+            <label class="form-check-label">{{ doc }}</label>
+        </div>
+        {% endfor %}
     </div>
-    
+
     <div class="audit-documents">
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Trial Balance</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Ledger Accounts</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Bank Reconciliation</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Fixed Asset Register</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Stock Statements</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Debtors/Creditors Aging</label></div>
+        {% for doc in ["Trial Balance", "Ledger Accounts", "Bank Reconciliation", "Fixed Asset Register", "Stock Statements", "Debtors/Creditors Aging"] %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" checked name="documents" value="{{ doc }}">
+            <label class="form-check-label">{{ doc }}</label>
+        </div>
+        {% endfor %}
     </div>
-    
+
     <div class="gst-documents">
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">GSTR-1 Returns</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">GSTR-3B Returns</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Purchase Register</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Sales Register</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Input Tax Credit Details</label></div>
+        {% for doc in ["GSTR-1 Returns", "GSTR-3B Returns", "Purchase Register", "Sales Register", "Input Tax Credit Details"] %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" checked name="documents" value="{{ doc }}">
+            <label class="form-check-label">{{ doc }}</label>
+        </div>
+        {% endfor %}
     </div>
-    
+
     <div class="roc-documents">
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Balance Sheet</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Profit & Loss Account</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Director's Report</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Auditor's Report</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Board Resolutions</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">AGM Minutes</label></div>
+        {% for doc in ["Balance Sheet", "Profit & Loss Account", "Director's Report", "Auditor's Report", "Board Resolutions", "AGM Minutes"] %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" checked name="documents" value="{{ doc }}">
+            <label class="form-check-label">{{ doc }}</label>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
+<!-- JS -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+
+document.addEventListener("DOMContentLoaded", function () {
+    const filterSelect = document.getElementById("serviceFilter");
+    const rows = document.querySelectorAll("#checklistTable tbody tr");
+    const noMessage = document.getElementById("noChecklistMessage");
+
+    filterSelect.addEventListener("change", function () {
+        const selected = this.value;
+        let anyVisible = false;
+
+        rows.forEach(row => {
+            const service = row.getAttribute("data-service");
+            const match = (selected === "All Services" || service === selected);
+            row.style.display = match ? "" : "none";
+            if (match) anyVisible = true;
+        });
+
+        noMessage.style.display = anyVisible ? "none" : "block";
+    });
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
     const serviceType = document.getElementById('serviceType');
     const documentList = document.getElementById('documentList');
     const templates = document.getElementById('documentTemplates');
-    
-    serviceType.addEventListener('change', function() {
+    const customDocBtn = document.getElementById('customDocBtn');
+
+    serviceType.addEventListener('change', function () {
         const selectedService = this.value;
         documentList.innerHTML = '';
-        
-        if (selectedService && selectedService !== 'custom') {
-            const templateClass = selectedService + '-documents';
-            const template = templates.querySelector('.' + templateClass);
-            if (template) {
-                documentList.innerHTML = template.innerHTML;
-            }
+        customDocBtn.style.display = selectedService ? 'block' : 'none';
+
+        let templateClass = '';
+        switch (selectedService) {
+            case 'ITR Filing': templateClass = 'itr-documents'; break;
+            case 'GST Returns': templateClass = 'gst-documents'; break;
+            case 'Statutory Audit': templateClass = 'audit-documents'; break;
+            case 'ROC Compliance': templateClass = 'roc-documents'; break;
+        }
+
+        const template = templates.querySelector('.' + templateClass);
+        if (template) {
+            const checkboxes = template.querySelectorAll('.form-check');
+            checkboxes.forEach((check) => {
+                const clone = check.cloneNode(true);
+                documentList.appendChild(clone);
+            });
         }
     });
 });
@@ -330,11 +291,11 @@ document.addEventListener('DOMContentLoaded', function() {
 function addCustomDocument() {
     const documentList = document.getElementById('documentList');
     const newDoc = document.createElement('div');
-    newDoc.className = 'form-check';
+    newDoc.className = 'form-check d-flex align-items-center gap-2 mt-2';
     newDoc.innerHTML = `
-        <input class="form-check-input" type="checkbox" checked>
-        <input type="text" class="form-control form-control-sm d-inline-block" style="width: 70%;" placeholder="Enter document name">
-        <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="this.parentElement.remove()">
+        <input class="form-check-input mt-0" type="checkbox" checked name="documents">
+        <input type="text" class="form-control form-control-sm" name="custom_docs" placeholder="Enter document name" required>
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">
             <i class="fas fa-trash"></i>
         </button>
     `;

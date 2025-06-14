@@ -322,6 +322,8 @@ class DocumentChecklist(db.Model):
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
 
+    client = db.relationship('Client', backref='document_checklists')
+
 class ReturnTracker(db.Model):
     __tablename__ = 'return_tracker'
     
