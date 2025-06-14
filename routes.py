@@ -4,9 +4,10 @@ from app import db
 from models import *
 from forms import *
 from utils import allowed_file, save_uploaded_file
-import os
 from datetime import datetime, date, timedelta
-from sqlalchemy import func, or_
+from sqlalchemy import func, extract, or_
+from collections import OrderedDict
+from calendar import month_abbr
 
 main_bp = Blueprint('main', __name__)
 
@@ -348,24 +349,61 @@ def new_document():
 @login_required
 def outstanding_reports():
     page = request.args.get('page', 1, type=int)
-    outstanding_pagination = OutstandingFee.query.join(Client).filter_by(status='Pending').order_by(OutstandingFee.due_date).paginate(
+    outstanding_pagination = OutstandingFee.query.join(Client, Client.id == OutstandingFee.client_id).order_by(OutstandingFee.due_date).paginate(
         page=page, per_page=20, error_out=False
     )
+
+    today = date.today()
+    month = today.month
+    year = today.year
+
+    # Add below these lines:
+    pending_count = OutstandingFee.query.filter_by(status='Pending').count()
+
+    this_month_collection = db.session.query(func.sum(OutstandingFee.amount)) \
+        .filter_by(status='Paid') \
+        .filter(extract('month', OutstandingFee.created_at) == month) \
+        .filter(extract('year', OutstandingFee.created_at) == year) \
+        .scalar() or 0
     
     # Calculate totals
-    total_outstanding = db.session.query(func.sum(OutstandingFee.amount)).filter_by(status='Pending').scalar() or 0
+    total_outstanding = db.session.query(func.sum(OutstandingFee.amount)).scalar() or 0
     overdue_count = OutstandingFee.query.filter(
-        OutstandingFee.status == 'Pending',
+        OutstandingFee.status == 'Overdue',
         OutstandingFee.due_date < date.today()
     ).count()
 
     form = OutstandingFeeForm()
     form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+
+    trend_data = OrderedDict()
+    for i in range(5, -1, -1):  # last 6 months
+        month_date = today - timedelta(days=i*30)
+        key = month_abbr[month_date.month]
+        total = db.session.query(func.sum(OutstandingFee.amount)).filter(
+            extract('month', OutstandingFee.created_at) == month_date.month,
+            extract('year', OutstandingFee.created_at) == month_date.year
+        ).scalar() or 0
+        trend_data[key] = total
+
+    # Status Breakdown
+    status_data = {
+        'Pending': OutstandingFee.query.filter_by(status='Pending').count(),
+        'Overdue': OutstandingFee.query.filter_by(status='Overdue').count(),
+        'Paid': OutstandingFee.query.filter_by(status='Paid').count()
+    }
     
-    return render_template('reports/outstanding.html', form=form, 
-                         outstanding=outstanding_pagination,
-                         total_outstanding=total_outstanding,
-                         overdue_count=overdue_count)
+    return render_template('reports/outstanding.html', 
+                        form=form, 
+                        outstanding=outstanding_pagination,
+                        total_outstanding=total_outstanding,
+                        overdue_count=overdue_count,
+                        pending_count=pending_count,
+                        today=today,
+                        this_month_collection=this_month_collection,
+                        trend_data=list(trend_data.values()),
+                        trend_labels=list(trend_data.keys()),
+                        status_data=status_data)
 
 @main_bp.route('/reports/outstanding/new', methods=['GET', 'POST'])
 @login_required
