@@ -140,6 +140,43 @@ def new_income_tax_return():
     
     return render_template('tax/income_tax.html', form=form, returns=None)
 
+@main_bp.route('/tax/income-tax/edit/<int:itr_id>', methods=['POST'])
+@login_required
+def edit_income_tax_return(itr_id):
+    itr = IncomeTaxReturn.query.get_or_404(itr_id)
+    form = IncomeTaxReturnForm()
+
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+
+    if form.validate_on_submit():
+        itr.client_id = form.client_id.data
+        itr.assessment_year = form.assessment_year.data
+        itr.return_type = form.return_type.data
+        itr.filing_date = form.filing_date.data
+        itr.due_date = form.due_date.data
+        itr.total_income = form.total_income.data or 0
+        itr.tax_payable = form.tax_payable.data or 0
+        itr.refund_amount = form.refund_amount.data or 0
+        itr.status = form.status.data
+        itr.acknowledgment_number = form.acknowledgment_number.data
+
+        db.session.commit()
+        flash('Income Tax Return updated successfully!', 'success')
+    else:
+        flash('Failed to update ITR. Please check form input.', 'danger')
+
+    return redirect(url_for('main.income_tax_returns'))
+
+@main_bp.route('/tax/income-tax/delete/<int:itr_id>', methods=['POST'])
+@login_required
+def delete_income_tax_return(itr_id):
+    itr = IncomeTaxReturn.query.get_or_404(itr_id)
+    db.session.delete(itr)
+    db.session.commit()
+    flash('Income Tax Return deleted successfully.', 'success')
+    return redirect(url_for('main.income_tax_returns'))
+
+#TDS Returns Routes
 @main_bp.route('/tax/tds')
 @login_required
 def tds_returns():
@@ -179,6 +216,41 @@ def new_tds_return():
     
     return render_template('tax/tds.html', form=form, returns=None)
 
+@main_bp.route('/tax/tds/update/<int:tds_id>', methods=['POST'])
+@login_required
+def update_tds_return(tds_id):
+    tds = TDSReturn.query.get_or_404(tds_id)
+    form = TDSReturnForm()
+
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+    
+    if form.validate_on_submit():
+        tds.client_id = form.client_id.data
+        tds.tan = form.tan.data
+        tds.quarter = form.quarter.data
+        tds.financial_year = form.financial_year.data
+        tds.return_type = form.return_type.data
+        tds.filing_date = form.filing_date.data
+        tds.due_date = form.due_date.data
+        tds.total_tds = form.total_tds.data
+        tds.status = form.status.data
+        tds.token_number = form.token_number.data
+        
+        db.session.commit()
+        flash('TDS Return updated successfully!', 'success')
+    
+    return redirect(url_for('main.tds_returns'))
+
+@main_bp.route('/tax/tds/delete/<int:tds_id>', methods=['POST'])
+@login_required
+def delete_tds_return(tds_id):
+    tds = TDSReturn.query.get_or_404(tds_id)
+    db.session.delete(tds)
+    db.session.commit()
+    flash('TDS Return deleted successfully!', 'success')
+    return redirect(url_for('main.tds_returns'))
+
+# GST Returns Routes
 @main_bp.route('/tax/gst')
 @login_required
 def gst_returns():
@@ -217,6 +289,42 @@ def new_gst_return():
         return redirect(url_for('main.gst_returns'))
     
     return render_template('tax/gst.html', form=form, returns=None)
+
+@main_bp.route('/tax/gst/edit/<int:gst_id>', methods=['POST'])
+@login_required
+def edit_gst_return(gst_id):
+    gst = GSTReturn.query.get_or_404(gst_id)
+    form = GSTReturnForm()
+
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+
+    if form.validate_on_submit():
+        gst.client_id = form.client_id.data
+        gst.gstin = form.gstin.data
+        gst.return_type = form.return_type.data
+        gst.month_year = form.month_year.data
+        gst.filing_date = form.filing_date.data
+        gst.due_date = form.due_date.data
+        gst.total_sales = form.total_sales.data or 0
+        gst.total_tax = form.total_tax.data or 0
+        gst.status = form.status.data
+        gst.arn_number = form.arn_number.data
+
+        db.session.commit()
+        flash('GST Return updated successfully!', 'success')
+    else:
+        flash('Failed to update GST Return.', 'danger')
+
+    return redirect(url_for('main.gst_returns'))
+
+@main_bp.route('/tax/gst/delete/<int:gst_id>', methods=['POST'])
+@login_required
+def delete_gst_return(gst_id):
+    gst = GSTReturn.query.get_or_404(gst_id)
+    db.session.delete(gst)
+    db.session.commit()
+    flash('GST Return deleted successfully!', 'success')
+    return redirect(url_for('main.gst_returns'))
 
 # Employee Management Routes
 @main_bp.route('/admin/employees')
@@ -782,6 +890,9 @@ def new_sft_return():
 @main_bp.route('/balance_sheet_audits')
 @login_required
 def balance_sheet_audits():
+    form = BalanceSheetAuditForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+
     search = request.args.get('search', '')
     page = request.args.get('page', 1, type=int)
     
@@ -795,9 +906,8 @@ def balance_sheet_audits():
     audits = query.order_by(BalanceSheetAudit.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-    
-    return render_template('compliance/balance_sheet_audits.html', audits=audits, search=search)
 
+    return render_template('compliance/balance_sheet_audits.html', form=form, audits=audits, search=search)
 
 
 @main_bp.route('/balance_sheet_audits/new', methods=['GET', 'POST'])
@@ -812,11 +922,14 @@ def new_balance_sheet_audit():
             financial_year=form.financial_year.data,
             audit_type=form.audit_type.data,
             balance_sheet_date=form.balance_sheet_date.data,
-            audit_completion_date=form.audit_completion_date.data,
             auditor_name=form.auditor_name.data,
             auditor_membership_no=form.auditor_membership_no.data,
             opinion_type=form.opinion_type.data,
             key_audit_matters=form.key_audit_matters.data,
+            recommendations=form.recommendations.data,
+            audit_period_from=form.audit_period_from.data,
+            audit_period_to=form.audit_period_to.data,
+            management_response=form.management_response.data,
             management_letter_issued=form.management_letter_issued.data,
             status=form.status.data,
             created_by=current_user.id
@@ -827,7 +940,7 @@ def new_balance_sheet_audit():
         flash('Balance Sheet & Audit entry created successfully!', 'success')
         return redirect(url_for('main.balance_sheet_audits'))
     
-    return render_template('compliance/audit.html', form=form, title='New Balance Sheet & Audit')
+    return render_template('compliance/balance_sheet_audits.html', form=form, title='New Balance Sheet & Audit')
 
 # CMA Reports Routes
 @main_bp.route('/cma_reports')
@@ -963,14 +1076,13 @@ def new_xbrl_report():
     if form.validate_on_submit():
         xbrl_file_path = None
         if form.xbrl_file.data:
-            """ xbrl_file_path = save_uploaded_file(form.xbrl_file.data, 'xbrl') """
-            file_path, file_size = save_uploaded_file(form.xbrl_file.data, 'xbrl')  # ✅ Unpack tuple
+            xbrl_file_path, file_size = save_uploaded_file(form.xbrl_file.data)  # ✅ Unpack tuple
         xbrl_report = XBRLReport(
             client_id=form.client_id.data,
             financial_year=form.financial_year.data,
             report_type=form.report_type.data,
             filing_category=form.filing_category.data,
-            xbrl_file_path=file_path,
+            xbrl_file_path=xbrl_file_path,
             validation_status=form.validation_status.data,
             validation_errors=form.validation_errors.data,
             filing_date=form.filing_date.data,

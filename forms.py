@@ -229,7 +229,6 @@ class BalanceSheetAuditForm(FlaskForm):
         ('Government', 'Government Audit')
     ], validators=[DataRequired()])
     balance_sheet_date = DateField('Balance Sheet Date', validators=[Optional()])
-    audit_completion_date = DateField('Audit Completion Date', validators=[Optional()])
     auditor_name = StringField('Auditor Name', validators=[Optional(), Length(max=200)])
     auditor_membership_no = StringField('Auditor Membership No.', validators=[Optional(), Length(max=20)])
     opinion_type = SelectField('Opinion Type', choices=[
@@ -238,7 +237,11 @@ class BalanceSheetAuditForm(FlaskForm):
         ('Adverse', 'Adverse'),
         ('Disclaimer', 'Disclaimer of Opinion')
     ], validators=[Optional()])
-    key_audit_matters = TextAreaField('Key Audit Matters', validators=[Optional()])
+    key_audit_matters = TextAreaField('Key Findings', validators=[Optional()])
+    recommendations = TextAreaField('Recommendations', validators=[Optional()])
+    audit_period_from = DateField('Audit Period From', validators=[Optional()])
+    audit_period_to = DateField('Audit Period To', validators=[Optional()])
+    management_response = TextAreaField('Management Response', validators=[Optional()])
     management_letter_issued = BooleanField('Management Letter Issued')
     status = SelectField('Status', choices=[
         ('In Progress', 'In Progress'),
