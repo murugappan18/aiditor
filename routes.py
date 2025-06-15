@@ -1286,8 +1286,71 @@ def add_return():
 @main_bp.route('/smart/auto-reminders')
 @login_required
 def auto_reminders():
-    auto_reminders = Reminder.query.filter_by(auto_created=True).order_by(Reminder.reminder_date).all()
-    return render_template('smart/auto_reminders.html', auto_reminders=auto_reminders)
+    settings = AutoReminderSetting.query.filter_by(user_id=current_user.id).first()
+
+    reminders = Reminder.query.filter_by(created_by=current_user.id, auto_created=True).all()
+
+    formatted_rules = []
+    active_count = 0
+
+    for r in reminders:
+        if r.status == 'Active':
+            active_count += 1
+        formatted_rules.append({
+            'title': r.title,
+            'reminder_type': r.reminder_type,
+            'days_before': (datetime.utcnow() - r.reminder_date).days,
+            'method': r.description,
+            'method_class': 'bg-info' if 'email' in r.description.lower() else 'bg-warning',
+            'field': r.reminder_type.lower()
+        })
+
+    return render_template(
+        'smart/auto_reminders.html',
+        settings=settings,
+        rules=formatted_rules,
+        active_count=active_count
+    )
+
+
+
+
+@main_bp.route('/smart/auto-reminders/add', methods=['POST'])
+@login_required
+def save_auto_reminder():
+    name = request.form.get('rule_name')
+    trigger = request.form.get('trigger_type')
+    days = int(request.form.get('days', 0))
+    day_type = request.form.get('dayType')
+    method = request.form.get('method')
+    status = request.form.get('status')
+
+    message = request.form.get('messageTemplate', '')
+
+    base_date = datetime.utcnow()
+    if day_type == 'before':
+        reminder_date = base_date - timedelta(days=days)
+    elif day_type == 'after':
+        reminder_date = base_date + timedelta(days=days)
+    else:
+        reminder_date = base_date
+
+    reminder = Reminder(
+    created_by=current_user.id,
+    title=name,
+    description=message or method,
+    reminder_type=trigger,
+    reminder_date=reminder_date,
+    status = request.form.get('status', 'Active').capitalize(),
+    auto_created=True
+)
+
+
+    db.session.add(reminder)
+    db.session.commit()
+
+    return redirect(url_for('main.auto_reminders'))
+
 
 # Enhanced CRM Routes
 @main_bp.route('/crm/client-search')

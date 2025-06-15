@@ -15,15 +15,18 @@
 </div>
 
 <div class="row mb-4">
+    <!-- Active Rules -->
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
                 <h5 class="card-title text-success">Active Rules</h5>
-                <h2 class="display-4">8</h2>
+                <h2 class="display-4">{{ active_count }}</h2>
                 <small class="text-muted">Auto-reminder rules</small>
             </div>
         </div>
     </div>
+
+    <!-- Pending Triggers -->
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
@@ -33,6 +36,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Messages Sent -->
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
@@ -42,6 +47,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Success Rate -->
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
@@ -53,7 +60,9 @@
     </div>
 </div>
 
+
 <div class="row">
+    <!-- Left Column: Reminder Rules -->
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
@@ -75,99 +84,54 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for rule in rules %}
                             <tr>
-                                <td>ITR Filing Reminder</td>
-                                <td>Due Date Approaching</td>
-                                <td>7 days</td>
-                                <td><span class="badge bg-primary">SMS + Email</span></td>
-                                <td><span class="badge bg-success">Active</span></td>
+                                <td>{{ rule.title }}</td>
+                                <td>{{ rule.reminder_type }}</td>
+                                <td>{{ rule.days_before }}</td>
+                                <td><span class="badge {{ rule.method_class }}">{{ rule.method }}</span></td>
+                                <td>
+                                    {% if rule.status == "Active" %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Paused</span>
+                                    {% endif %}
+                                </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
                                         <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn btn-outline-danger btn-sm" title="Disable">
-                                            <i class="fas fa-pause"></i>
-                                        </button>
+                                        {% if rule.status == "Active" %}
+                                            <button class="btn btn-outline-danger btn-sm" title="Disable">
+                                                <i class="fas fa-pause"></i>
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-outline-success btn-sm" title="Enable">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
+                            {% else %}
                             <tr>
-                                <td>GST Return Alert</td>
-                                <td>Monthly Due Date</td>
-                                <td>3 days</td>
-                                <td><span class="badge bg-warning">SMS</span></td>
-                                <td><span class="badge bg-success">Active</span></td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-outline-danger btn-sm" title="Disable">
-                                            <i class="fas fa-pause"></i>
-                                        </button>
-                                    </div>
+                                <td colspan="6" class="text-center text-muted py-3">
+                                    No automated reminder rules set
                                 </td>
                             </tr>
-                            <tr>
-                                <td>Birthday Wishes</td>
-                                <td>Client Birthday</td>
-                                <td>0 days</td>
-                                <td><span class="badge bg-success">Email</span></td>
-                                <td><span class="badge bg-success">Active</span></td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-outline-danger btn-sm" title="Disable">
-                                            <i class="fas fa-pause"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Outstanding Fee Alert</td>
-                                <td>Payment Overdue</td>
-                                <td>Weekly</td>
-                                <td><span class="badge bg-danger">SMS</span></td>
-                                <td><span class="badge bg-success">Active</span></td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-outline-danger btn-sm" title="Disable">
-                                            <i class="fas fa-pause"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>TDS Return Due</td>
-                                <td>Quarterly Due Date</td>
-                                <td>5 days</td>
-                                <td><span class="badge bg-info">Email</span></td>
-                                <td><span class="badge bg-warning">Paused</span></td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary btn-sm" title="Edit Rule">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-outline-success btn-sm" title="Enable">
-                                            <i class="fas fa-play"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
+                        
                     </table>
                 </div>
             </div>
         </div>
     </div>
-    
+
+    <!-- Right Column: Upcoming Triggers + Performance Stats -->
     <div class="col-md-4">
+        <!-- Upcoming Triggers -->
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -207,7 +171,8 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- Performance Stats -->
         <div class="card mt-3">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -237,94 +202,86 @@
     </div>
 </div>
 
-<!-- Configure Rule Modal -->
+
+<!-- Configure Modal -->
 <div class="modal fade" id="configureModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Configure Auto-Reminder Rule</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form>
+            <form action="{{ url_for('main.save_auto_reminder') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configure Auto-Reminder Rule</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Rule Name</label>
-                                <input type="text" class="form-control" placeholder="e.g., ITR Filing Reminder" required>
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Rule Name</label>
+                            <input type="text" name="rule_name" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Trigger Type</label>
-                                <select class="form-select" required>
-                                    <option value="">Select Trigger</option>
-                                    <option value="due_date">Due Date Approaching</option>
-                                    <option value="birthday">Client Birthday</option>
-                                    <option value="overdue">Payment Overdue</option>
-                                    <option value="custom">Custom Date</option>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Trigger Type</label>
+                            <select name="trigger_type" class="form-select" required>
+                                <option value="">Select Trigger</option>
+                                <option value="due_date">Due Date Approaching</option>
+                                <option value="birthday">Client Birthday</option>
+                                <option value="overdue">Payment Overdue</option>
+                                <option value="custom">Custom Date</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Days Before/After</label>
+                            <div class="input-group">
+                                <input type="number" name="days" class="form-control" value="7" min="0" required>
+                                <select name="day_type" class="form-select">
+                                    <option value="before">Before</option>
+                                    <option value="after">After</option>
+                                    <option value="on">On the Day</option>
                                 </select>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Days Before/After</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" value="7" min="0" max="365">
-                                    <select class="form-select">
-                                        <option value="before">Days Before</option>
-                                        <option value="after">Days After</option>
-                                        <option value="on">On the Day</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Communication Method</label>
-                                <select class="form-select" required>
-                                    <option value="sms">SMS Only</option>
-                                    <option value="email">Email Only</option>
-                                    <option value="both">SMS + Email</option>
-                                </select>
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Communication Method</label>
+                            <select name="method" class="form-select" required>
+                                <option value="sms">SMS Only</option>
+                                <option value="email">Email Only</option>
+                                <option value="both">SMS + Email</option>
+                            </select>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Apply to Client Types</label>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="allClients" checked>
-                            <label class="form-check-label" for="allClients">All Active Clients</label>
+                            <input class="form-check-input" type="checkbox" name="client_types" value="all" checked>
+                            <label class="form-check-label">All Active Clients</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="corporateOnly">
-                            <label class="form-check-label" for="corporateOnly">Corporate Clients Only</label>
+                            <input class="form-check-input" type="checkbox" name="client_types" value="corporate">
+                            <label class="form-check-label">Corporate Clients Only</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="individualOnly">
-                            <label class="form-check-label" for="individualOnly">Individual Clients Only</label>
+                            <input class="form-check-input" type="checkbox" name="client_types" value="individual">
+                            <label class="form-check-label">Individual Clients Only</label>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Message Template</label>
-                        <select class="form-select">
+                        <select name="template_select" class="form-select">
                             <option value="">Select Existing Template</option>
                             <option value="itr_reminder">ITR Filing Reminder</option>
                             <option value="gst_reminder">GST Return Reminder</option>
                             <option value="birthday">Birthday Wishes</option>
                             <option value="payment">Payment Reminder</option>
                         </select>
-                        <div class="form-text">Or create a new template below</div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Custom Message (Optional)</label>
-                        <textarea class="form-control" rows="4" placeholder="Dear {client_name},
+                        <textarea name="custom_message" class="form-control" rows="4" placeholder="Dear {client_name},
 
 Your {return_type} for {period} is due on {due_date}. Please ensure timely filing to avoid penalties.
 
@@ -332,30 +289,27 @@ Best regards,
 Your CA Team"></textarea>
                         <div class="form-text">Available variables: {client_name}, {due_date}, {return_type}, {period}, {amount}</div>
                     </div>
-                    
+
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Send Time</label>
-                                <input type="time" class="form-control" value="09:00">
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Send Time</label>
+                            <input type="time" name="send_time" class="form-control" value="09:00">
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Status</label>
-                                <select class="form-select">
-                                    <option value="active">Active</option>
-                                    <option value="paused">Paused</option>
-                                </select>
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="active">Active</option>
+                                <option value="paused">Paused</option>
+                            </select>
                         </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Save Rule</button>
-            </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Rule</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
