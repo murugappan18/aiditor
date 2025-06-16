@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, make_response
 
 from flask_login import login_required, current_user
@@ -1129,16 +1130,13 @@ def new_xbrl_report():
     form = XBRLReportForm()
     form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
 
-    file_path = None  # Initialize before block
+    xbrl_file_path = None  # Always initialize your path
+
     if form.validate_on_submit():
         if form.xbrl_file.data:
-<<<<<<< HEAD
-            file_path, file_size = save_uploaded_file(form.xbrl_file.data, 'xbrl')
-            print(f"File saved to: {file_path}")  # For debugging
+            xbrl_file_path, file_size = save_uploaded_file(form.xbrl_file.data, 'xbrl')  # ✅ Use correct folder & unpack tuple
+            print(f"File saved to: {xbrl_file_path}")  # Optional debug
 
-=======
-            xbrl_file_path, file_size = save_uploaded_file(form.xbrl_file.data)  # ✅ Unpack tuple
->>>>>>> c618d3ff67d4e46938fcff74231e9826fa12bccf
         xbrl_report = XBRLReport(
             client_id=form.client_id.data,
             financial_year=form.financial_year.data,
