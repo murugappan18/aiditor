@@ -1,6 +1,5 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, make_response
-
 from flask_login import login_required, current_user
 from app import db
 from models import *
@@ -1049,7 +1048,6 @@ def new_cma_report():
     
     return render_template('compliance/cma_form.html', form=form, title='New CMA Report')
 
-
 @main_bp.route('/cma_report/edit/<int:report_id>', methods=['GET', 'POST'])
 def edit_cma_report(report_id):
     report = CMAReport.query.get_or_404(report_id)
@@ -1066,9 +1064,6 @@ def edit_cma_report(report_id):
 
     return render_template('compliance/cma_form.html', form=form)
 
-
-
-
 @main_bp.route('/cma_report/delete/<int:report_id>', methods=['POST'])
 def delete_cma_report(report_id):
     report = CMAReport.query.get_or_404(report_id)
@@ -1076,7 +1071,6 @@ def delete_cma_report(report_id):
     db.session.commit()
     flash('CMA Report deleted successfully!', 'success')
     return redirect(url_for('main.cma_reports'))
-
 
 # Assessment Orders Routes
 @main_bp.route('/assessment_orders')
@@ -1131,7 +1125,6 @@ def new_assessment_order():
     
     return render_template('compliance/assessment_form.html', form=form, title='New Assessment Order')
 
-
 # Edit Route
 @main_bp.route('/assessment_order/edit/<int:order_id>', methods=['GET', 'POST'])
 def edit_assessment_order(order_id):
@@ -1155,8 +1148,6 @@ def delete_assessment_order(order_id):
     db.session.commit()
     flash('Assessment Order deleted successfully!', 'success')
     return redirect(url_for('main.assessment_orders'))
-
-
 
 # XBRL Reports Routes
 @main_bp.route('/xbrl_reports')
@@ -1251,7 +1242,6 @@ def xbrl_delete(report_id):
     db.session.commit()
     flash('XBRL Report deleted successfully!', 'success')
     return redirect(url_for('main.xbrl_reports'))
-
 
 @main_bp.route('/api/reminders/upcoming')
 @login_required
@@ -1389,7 +1379,6 @@ def edit_challan(challan_id):
         return redirect(url_for('main.challan_management'))
 
     return render_template('smart/challan_form.html', form=form, title='Edit Challan')
-
 
 @main_bp.route('/smart/challan-management/delete/<int:challan_id>', methods=['POST'])
 @login_required
