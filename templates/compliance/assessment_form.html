@@ -3,81 +3,87 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Create New Assessment Order</h2>
+    <h2 class="mb-4">Create New Assessment Order</h2>
     <form method="POST">
         {{ form.hidden_tag() }}
 
-        <div class="mb-3">
-            {{ form.client_id.label(class="form-label") }}
-            {{ form.client_id(class="form-select") }}
-        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                {{ form.client_id.label(class="form-label") }}
+                {{ form.client_id(class="form-select") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.assessment_year.label(class="form-label") }}
-            {{ form.assessment_year(class="form-control") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.assessment_year.label(class="form-label") }}
+                {{ form.assessment_year(class="form-control") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.order_type.label(class="form-label") }}
-            {{ form.order_type(class="form-select") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.order_type.label(class="form-label") }}
+                {{ form.order_type(class="form-select") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.order_date.label(class="form-label") }}
-            {{ form.order_date(class="form-control", type="date") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.order_date.label(class="form-label") }}
+                {{ form.order_date(class="form-control", type="date") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.order_number.label(class="form-label") }}
-            {{ form.order_number(class="form-control") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.order_number.label(class="form-label") }}
+                {{ form.order_number(class="form-control") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.total_income_assessed.label(class="form-label") }}
-            {{ form.total_income_assessed(class="form-control") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.total_income_assessed.label(class="form-label") }}
+                {{ form.total_income_assessed(class="form-control") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.tax_demanded.label(class="form-label") }}
-            {{ form.tax_demanded(class="form-control") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.tax_demanded.label(class="form-label") }}
+                {{ form.tax_demanded(class="form-control") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.interest_charged.label(class="form-label") }}
-            {{ form.interest_charged(class="form-control") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.interest_charged.label(class="form-label") }}
+                {{ form.interest_charged(class="form-control") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.penalty_imposed.label(class="form-label") }}
-            {{ form.penalty_imposed(class="form-control") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.penalty_imposed.label(class="form-label") }}
+                {{ form.penalty_imposed(class="form-control") }}
+            </div>
 
-        <div class="form-check mb-3">
-            {{ form.appeal_filed(class="form-check-input") }}
-            {{ form.appeal_filed.label(class="form-check-label") }}
-        </div>
+            <div class="col-md-6 d-flex align-items-center mt-4">
+                <div class="form-check">
+                    {{ form.appeal_filed(class="form-check-input") }}
+                    {{ form.appeal_filed.label(class="form-check-label") }}
+                </div>
+            </div>
 
-        <div class="mb-3">
-            {{ form.appeal_date.label(class="form-label") }}
-            {{ form.appeal_date(class="form-control", type="date") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.appeal_date.label(class="form-label") }}
+                {{ form.appeal_date(class="form-control", type="date") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.appeal_number.label(class="form-label") }}
-            {{ form.appeal_number(class="form-control") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.appeal_number.label(class="form-label") }}
+                {{ form.appeal_number(class="form-control") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.status.label(class="form-label") }}
-            {{ form.status(class="form-select") }}
-        </div>
+            <div class="col-md-6">
+                {{ form.status.label(class="form-label") }}
+                {{ form.status(class="form-select") }}
+            </div>
 
-        <div class="mb-3">
-            {{ form.remarks.label(class="form-label") }}
-            {{ form.remarks(class="form-control", rows="3") }}
-        </div>
+            <div class="col-md-12">
+                {{ form.remarks.label(class="form-label") }}
+                {{ form.remarks(class="form-control", rows="3") }}
+            </div>
 
-        <button type="submit" class="btn btn-primary">Submit</button>
+            <div class="col-12 mt-3">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
     </form>
 </div>
 {% endblock %}

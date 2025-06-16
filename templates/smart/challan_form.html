@@ -1,51 +1,77 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="container mt-4">
-    <h2>{{ title }}</h2>
+    <h2 class="mb-4">{{ title }}</h2>
     <form method="POST">
         {{ form.hidden_tag() }}
 
-        <div class="form-group">
-            {{ form.client_id.label }} {{ form.client_id(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.challan_number.label }} {{ form.challan_number(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.challan_type.label }} {{ form.challan_type(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.tax_type.label }} {{ form.tax_type(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.assessment_year.label }} {{ form.assessment_year(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.amount.label }} {{ form.amount(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.payment_date.label }} {{ form.payment_date(class="form-control", placeholder="YYYY-MM-DD") }}
-        </div>
-        <div class="form-group">
-            {{ form.bank_name.label }} {{ form.bank_name(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.bank_branch.label }} {{ form.bank_branch(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.bsr_code.label }} {{ form.bsr_code(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.serial_number.label }} {{ form.serial_number(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.status.label }} {{ form.status(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.remarks.label }} {{ form.remarks(class="form-control", rows="3") }}
-        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">{{ form.client_id.label }}</label>
+                {{ form.client_id(class="form-select") }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.challan_number.label }}</label>
+                {{ form.challan_number(class="form-control") }}
+            </div>
 
-        <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.challan_type.label }}</label>
+                {{ form.challan_type(class="form-select") }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.tax_type.label }}</label>
+                {{ form.tax_type(class="form-control") }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">{{ form.assessment_year.label }}</label>
+                {{ form.assessment_year(class="form-control") }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.amount.label }}</label>
+                {{ form.amount(class="form-control") }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">{{ form.payment_date.label }}</label>
+                {{ form.payment_date(class="form-control", placeholder="YYYY-MM-DD") }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.bank_name.label }}</label>
+                {{ form.bank_name(class="form-control") }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">{{ form.bank_branch.label }}</label>
+                {{ form.bank_branch(class="form-control") }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.bsr_code.label }}</label>
+                {{ form.bsr_code(class="form-control") }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">{{ form.serial_number.label }}</label>
+                {{ form.serial_number(class="form-control") }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.status.label }}</label>
+                {{ form.status(class="form-select") }}
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">{{ form.remarks.label }}</label>
+                {{ form.remarks(class="form-control", rows="3") }}
+            </div>
+
+            <div class="col-12 mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>{{ form.submit.label.text }}
+                </button>
+            </div>
+        </div>
     </form>
 </div>
 {% endblock %}

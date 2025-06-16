@@ -9,3 +9,8 @@ pyvenv.cfg
 
 # Ignore SQLite DB
 *.db
+
+# Virtual environments
+.venv/
+venv/
+venv/

@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, make_response
+
 from flask_login import login_required, current_user
 from app import db
 from models import *
@@ -842,6 +843,35 @@ def new_cma_report():
     
     return render_template('compliance/cma_form.html', form=form, title='New CMA Report')
 
+
+@main_bp.route('/cma_report/edit/<int:report_id>', methods=['GET', 'POST'])
+def edit_cma_report(report_id):
+    report = CMAReport.query.get_or_404(report_id)
+    form = CMAReportForm(obj=report)
+
+    # Populate dynamic client choices
+    form.client_id.choices = [(client.id, client.name) for client in Client.query.all()]
+
+    if form.validate_on_submit():
+        form.populate_obj(report)
+        db.session.commit()
+        flash('CMA Report updated successfully!', 'success')
+        return redirect(url_for('main.cma_reports'))
+
+    return render_template('compliance/cma_form.html', form=form)
+
+
+
+
+@main_bp.route('/cma_report/delete/<int:report_id>', methods=['POST'])
+def delete_cma_report(report_id):
+    report = CMAReport.query.get_or_404(report_id)
+    db.session.delete(report)
+    db.session.commit()
+    flash('CMA Report deleted successfully!', 'success')
+    return redirect(url_for('main.cma_reports'))
+
+
 # Assessment Orders Routes
 @main_bp.route('/assessment_orders')
 @login_required
@@ -896,6 +926,32 @@ def new_assessment_order():
     return render_template('compliance/assessment_form.html', form=form, title='New Assessment Order')
 
 
+# Edit Route
+@main_bp.route('/assessment_order/edit/<int:order_id>', methods=['GET', 'POST'])
+def edit_assessment_order(order_id):
+    order = AssessmentOrder.query.get_or_404(order_id)
+    form = AssessmentOrderForm(obj=order)
+    form.client_id.choices = [(client.id, client.name) for client in Client.query.all()]
+
+    if form.validate_on_submit():
+        form.populate_obj(order)
+        db.session.commit()
+        flash('Assessment Order updated successfully!', 'success')
+        return redirect(url_for('main.assessment_orders'))
+
+    return render_template('compliance/assessment_form.html', form=form)
+
+# Delete Route
+@main_bp.route('/assessment_order/delete/<int:order_id>', methods=['POST'])
+def delete_assessment_order(order_id):
+    order = AssessmentOrder.query.get_or_404(order_id)
+    db.session.delete(order)
+    db.session.commit()
+    flash('Assessment Order deleted successfully!', 'success')
+    return redirect(url_for('main.assessment_orders'))
+
+
+
 # XBRL Reports Routes
 @main_bp.route('/xbrl_reports')
 @login_required
@@ -921,12 +977,13 @@ def xbrl_reports():
 def new_xbrl_report():
     form = XBRLReportForm()
     form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
-    
+
+    file_path = None  # Initialize before block
     if form.validate_on_submit():
-        xbrl_file_path = None
         if form.xbrl_file.data:
-            """ xbrl_file_path = save_uploaded_file(form.xbrl_file.data, 'xbrl') """
-            file_path, file_size = save_uploaded_file(form.xbrl_file.data, 'xbrl')  # ✅ Unpack tuple
+            file_path, file_size = save_uploaded_file(form.xbrl_file.data, 'xbrl')
+            print(f"File saved to: {file_path}")  # For debugging
+
         xbrl_report = XBRLReport(
             client_id=form.client_id.data,
             financial_year=form.financial_year.data,
@@ -940,13 +997,54 @@ def new_xbrl_report():
             status=form.status.data,
             created_by=current_user.id
         )
-        
+
         db.session.add(xbrl_report)
         db.session.commit()
         flash('XBRL Report created successfully!', 'success')
         return redirect(url_for('main.xbrl_reports'))
-    
+
     return render_template('compliance/xbrl_form.html', form=form, title='New XBRL Report')
+
+@main_bp.route('/xbrl_reports/edit/<int:report_id>', methods=['GET', 'POST'])
+@login_required
+def xbrl_edit(report_id):
+    report = XBRLReport.query.get_or_404(report_id)
+    form = XBRLReportForm(obj=report)
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+
+    if form.validate_on_submit():
+        report.client_id = form.client_id.data
+        report.financial_year = form.financial_year.data
+        report.report_type = form.report_type.data
+        report.filing_category = form.filing_category.data
+        report.validation_status = form.validation_status.data
+        report.validation_errors = form.validation_errors.data
+        report.filing_date = form.filing_date.data
+        report.acknowledgment_number = form.acknowledgment_number.data
+        report.status = form.status.data
+        db.session.commit()
+        flash('XBRL Report updated successfully!', 'success')
+        return redirect(url_for('main.xbrl_reports'))
+
+    return render_template('compliance/xbrl_form.html', form=form, title='Edit XBRL Report')
+
+# Route: Delete XBRL Report
+@main_bp.route('/xbrl_reports/delete/<int:report_id>', methods=['POST'])
+@login_required
+def xbrl_delete(report_id):
+    report = XBRLReport.query.get_or_404(report_id)
+    if report.xbrl_file_path:
+        try:
+            abs_path = os.path.join(current_app.root_path, report.xbrl_file_path)
+            if os.path.exists(abs_path):
+                os.remove(abs_path)
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+    db.session.delete(report)
+    db.session.commit()
+    flash('XBRL Report deleted successfully!', 'success')
+    return redirect(url_for('main.xbrl_reports'))
+
 
 @main_bp.route('/api/reminders/upcoming')
 @login_required
@@ -1016,7 +1114,6 @@ def validate_gst():
 @login_required
 def challan_management():
     form = ChallanManagementForm()
-
     query = ChallanManagement.query
 
     if form.validate_on_submit():
@@ -1025,12 +1122,19 @@ def challan_management():
 
     challans = query.order_by(ChallanManagement.created_at.desc()).all()
 
+        # 📊 Metric calculations
+    total_challans = len(challans)
+    pending_amount = sum(c.amount for c in challans if c.status.lower() != 'cleared')
+    cleared_amount = sum(c.amount for c in challans if c.status.lower() == 'cleared')
+
     return render_template(
         'smart/challan_management.html',
         challans=challans,
-        form=form
+        form=form,
+        total_challans=total_challans,
+        pending_amount=pending_amount,
+        cleared_amount=cleared_amount
     )
-
 
 @main_bp.route('/smart/challan-management/new', methods=['GET', 'POST'])
 @login_required
@@ -1064,7 +1168,46 @@ def new_challan():
     return render_template('smart/challan_form.html', form=form, title='New Challan')
 
 
+@main_bp.route('/smart/challan-management/edit/<int:challan_id>', methods=['GET', 'POST'])
+@login_required
+def edit_challan(challan_id):
+    challan = ChallanManagement.query.get_or_404(challan_id)
+    form = ChallanManagementForm(obj=challan)
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
 
+    if form.validate_on_submit():
+        form.populate_obj(challan)
+        db.session.commit()
+        flash('Challan updated successfully!', 'success')
+        return redirect(url_for('main.challan_management'))
+
+    return render_template('smart/challan_form.html', form=form, title='Edit Challan')
+
+
+@main_bp.route('/smart/challan-management/delete/<int:challan_id>', methods=['POST'])
+@login_required
+def delete_challan(challan_id):
+    challan = ChallanManagement.query.get_or_404(challan_id)
+    db.session.delete(challan)
+    db.session.commit()
+    flash('Challan deleted successfully!', 'success')
+    return redirect(url_for('main.challan_management'))
+
+@main_bp.route('/smart/challan-management/print/<int:challan_id>', methods=['GET'])
+@login_required
+def print_challan(challan_id):
+    challan = ChallanManagement.query.get_or_404(challan_id)
+    return render_template('smart/challan_print.html', challan=challan)
+
+""" @main_bp.route('/print-pdf/<int:id>')
+def print_pdf(id):
+    challan = ChallanManagement.query.get_or_404(id)
+    rendered = render_template('challan_print.html', challan=challan, now=datetime.now)
+    pdf = HTML(string=rendered).write_pdf()
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'inline; filename=challan.pdf'
+    return response """
 
 
 @main_bp.route('/smart/return-tracker')

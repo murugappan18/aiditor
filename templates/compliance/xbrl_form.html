@@ -2,92 +2,96 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>{{ title }}</h2>
+    <h2 class="mb-4">{{ title }}</h2>
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
 
-        <div class="form-group">
-            {{ form.client_id.label(class="form-label") }}
-            {{ form.client_id(class="form-control") }}
-            {% for error in form.client_id.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">{{ form.client_id.label }}</label>
+                {{ form.client_id(class="form-control") }}
+                {% for error in form.client_id.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <div class="form-group">
-            {{ form.financial_year.label(class="form-label") }}
-            {{ form.financial_year(class="form-control") }}
-            {% for error in form.financial_year.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.financial_year.label }}</label>
+                {{ form.financial_year(class="form-control") }}
+                {% for error in form.financial_year.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <div class="form-group">
-            {{ form.report_type.label(class="form-label") }}
-            {{ form.report_type(class="form-control") }}
-            {% for error in form.report_type.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.report_type.label }}</label>
+                {{ form.report_type(class="form-control") }}
+                {% for error in form.report_type.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <div class="form-group">
-            {{ form.filing_category.label(class="form-label") }}
-            {{ form.filing_category(class="form-control") }}
-            {% for error in form.filing_category.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.filing_category.label }}</label>
+                {{ form.filing_category(class="form-control") }}
+                {% for error in form.filing_category.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <div class="form-group">
-            {{ form.xbrl_file.label(class="form-label") }}
-            {{ form.xbrl_file(class="form-control-file") }}
-            {% for error in form.xbrl_file.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.xbrl_file.label }}</label>
+                {{ form.xbrl_file(class="form-control-file") }}
+                {% for error in form.xbrl_file.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <div class="form-group">
-            {{ form.validation_status.label(class="form-label") }}
-            {{ form.validation_status(class="form-control") }}
-            {% for error in form.validation_status.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.validation_status.label }}</label>
+                {{ form.validation_status(class="form-control") }}
+                {% for error in form.validation_status.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <div class="form-group">
-            {{ form.validation_errors.label(class="form-label") }}
-            {{ form.validation_errors(class="form-control", rows=3) }}
-            {% for error in form.validation_errors.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+            <div class="col-md-12">
+                <label class="form-label">{{ form.validation_errors.label }}</label>
+                {{ form.validation_errors(class="form-control", rows=3) }}
+                {% for error in form.validation_errors.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <div class="form-group">
-            {{ form.filing_date.label(class="form-label") }}
-            {{ form.filing_date(class="form-control", type="date") }}
-            {% for error in form.filing_date.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.filing_date.label }}</label>
+                {{ form.filing_date(class="form-control", type="date") }}
+                {% for error in form.filing_date.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <div class="form-group">
-            {{ form.acknowledgment_number.label(class="form-label") }}
-            {{ form.acknowledgment_number(class="form-control") }}
-            {% for error in form.acknowledgment_number.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.acknowledgment_number.label }}</label>
+                {{ form.acknowledgment_number(class="form-control") }}
+                {% for error in form.acknowledgment_number.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <div class="form-group">
-            {{ form.status.label(class="form-label") }}
-            {{ form.status(class="form-control") }}
-            {% for error in form.status.errors %}
-                <small class="text-danger">{{ error }}</small>
-            {% endfor %}
-        </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ form.status.label }}</label>
+                {{ form.status(class="form-control") }}
+                {% for error in form.status.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
 
-        <button type="submit" class="btn btn-primary mt-3">Submit</button>
-        <a href="{{ url_for('main.xbrl_reports') }}" class="btn btn-secondary mt-3">Cancel</a>
+            <div class="col-12 mt-3">
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <a href="{{ url_for('main.xbrl_reports') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
     </form>
 </div>
 {% endblock %}
