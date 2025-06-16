@@ -3,7 +3,7 @@ import uuid
 from werkzeug.utils import secure_filename
 from flask import current_app
 
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif'}
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'xbrl', 'xml'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -31,8 +31,8 @@ def allowed_file(filename):
     
     return None, None """
 
-def save_uploaded_file(file, subfolder=''):
-    """Save uploaded file into a subfolder and return file path and size"""
+""" def save_uploaded_file(file, subfolder=''):
+    '''Save uploaded file into a subfolder and return file path and size'''
     if file and allowed_file(file.filename):
         # Build upload directory with optional subfolder
         upload_dir = os.path.join(current_app.root_path, 'uploads', subfolder)
@@ -48,6 +48,30 @@ def save_uploaded_file(file, subfolder=''):
         file_size = os.path.getsize(file_path)
         return file_path, file_size
 
+    return None, None """
+
+def save_uploaded_file(file, subfolder=''):
+    """Save uploaded file into a subfolder and return relative file path and size"""
+    print("Uploaded filename:", file.filename)
+
+    if file and allowed_file(file.filename):
+        print("File is allowed. Proceeding to save.")
+        upload_dir = os.path.join(current_app.root_path, 'uploads', subfolder)
+        os.makedirs(upload_dir, exist_ok=True)
+
+        filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"{name}_{uuid.uuid4().hex[:8]}{ext}"
+
+        file_path = os.path.join(upload_dir, unique_filename)
+        file.save(file_path)
+
+        file_size = os.path.getsize(file_path)
+
+        rel_path = os.path.join('uploads', subfolder, unique_filename)
+        return rel_path, file_size
+
+    print("File is NOT allowed.")
     return None, None
 
 def format_currency(amount):
