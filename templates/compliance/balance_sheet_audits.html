@@ -80,7 +80,11 @@
                                     —
                                 {% endif %}
                             </td>
-                            <td>{{ audit.status or '—' }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if audit.status == 'Completed' else 'warning' if audit.status == 'In Progress' else 'info' }}">
+                                    {{ audit.status or '—'}}
+                                </span>
+                            </td>
                             <td>
                                 {% if audit.key_audit_matters %}
                                     {{ audit.key_audit_matters[:30] }}{% if audit.key_audit_matters|length > 30 %}...{% endif %}
@@ -89,9 +93,23 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="btn btn-outline-primary" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
+                                <div class="btn-group btn-group-sm">
+                                    <!-- Edit Button -->
+                                    <button class="btn btn-outline-primary" title="Edit" 
+                                            data-bs-toggle="modal" data-bs-target="#editBSAModal{{ audit.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info btn-sm" title="View Details"
+                                            data-bs-toggle="modal" data-bs-target="#bsaModal{{ audit.id }}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <!-- Delete Button -->
+                                    <form method="POST" action="{{ url_for('main.delete_balance_sheet_audit', bsa_id=audit.id) }}" onsubmit="return confirm('Are you sure you want to delete this Balance Sheet Audit?');" style="display:inline;">
+                                        <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -249,6 +267,237 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Audit Modal -->
+{% if audits and audits.items %}
+    {% for audit in audits.items %}
+        <div class="modal fade" id="editBSAModal{{ audit.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <form method="POST" action="{{ url_for('main.edit_balance_sheet_audit', bsa_id=audit.id) }}">
+                        {{ form.hidden_tag() }}
+                        <input type="hidden" name="audit_id" value="{{ audit.id }}">
+                        
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Balance Sheet Audit - {{ audit.client.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.client_id.label(class="form-label") }}
+                                    <select class="form-select" name="client_id">
+                                        {% for id, name in form.client_id.choices %}
+                                            <option value="{{ id }}" {% if id == audit.client_id %}selected{% endif %}>{{ name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    {{ form.audit_type.label(class="form-label") }}
+                                    <select class="form-select" name="audit_type">
+                                        {% for val, label in form.audit_type.choices %}
+                                            <option value="{{ val }}" {% if val == audit.audit_type %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    {{ form.status.label(class="form-label") }}
+                                    <select class="form-select" name="status">
+                                        {% for val, label in form.status.choices %}
+                                            <option value="{{ val }}" {% if val == audit.status %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.financial_year.label(class="form-label") }}
+                                    <input type="text" name="financial_year" class="form-control" value="{{ audit.financial_year }}">
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    {{ form.balance_sheet_date.label(class="form-label") }}
+                                    <input type="date" name="balance_sheet_date" class="form-control" value="{{ audit.balance_sheet_date }}">
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    {{ form.opinion_type.label(class="form-label") }}
+                                    <select class="form-select" name="opinion_type">
+                                        {% for val, label in form.opinion_type.choices %}
+                                            <option value="{{ val }}" {% if val == audit.opinion_type %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.auditor_name.label(class="form-label") }}
+                                <input type="text" name="auditor_name" class="form-control" value="{{ audit.auditor_name }}">
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.auditor_membership_no.label(class="form-label") }}
+                                <input type="text" name="auditor_membership_no" class="form-control" value="{{ audit.auditor_membership_no }}">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.audit_period_from.label(class="form-label") }}
+                                    <input type="date" name="audit_period_from" class="form-control" value="{{ audit.audit_period_from }}">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    {{ form.audit_period_to.label(class="form-label") }}
+                                    <input type="date" name="audit_period_to" class="form-control" value="{{ audit.audit_period_to }}">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.key_audit_matters.label(class="form-label") }}
+                                <textarea class="form-control" name="key_audit_matters">{{ audit.key_audit_matters }}</textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.recommendations.label(class="form-label") }}
+                                <textarea class="form-control" name="recommendations">{{ audit.recommendations }}</textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.management_response.label(class="form-label") }}
+                                <textarea class="form-control" name="management_response">{{ audit.management_response }}</textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.management_letter_issued.label(class="form-check-label") }}
+                                <input class="form-check-input ms-2" type="checkbox" name="management_letter_issued" {% if audit.management_letter_issued %}checked{% endif %}>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Audit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- View Modal -->
+{% if audits and audits.items %}
+    {% for audit in audits.items %}
+        <div class="modal fade" id="bsaModal{{ audit.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Audit Details - {{ audit.client.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Client Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Name:</strong></td>
+                                        <td>{{ audit.client.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>{{ audit.client.email or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>PAN:</strong></td>
+                                        <td>{{ audit.client.pan or '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Audit Details</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Audit Type:</strong></td>
+                                        <td>{{ audit.audit_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Financial Year:</strong></td>
+                                        <td>{{ audit.financial_year }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Balance Sheet Date:</strong></td>
+                                        <td>{{ audit.balance_sheet_date.strftime('%d/%m/%Y') if audit.balance_sheet_date else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Opinion Type:</strong></td>
+                                        <td>{{ audit.opinion_type or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if audit.status == 'Completed' else 'warning' if audit.status == 'In Progress' else 'info' }}">
+                                                {{ audit.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6>Audit Scope & Outcome</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Auditor Name:</strong></td>
+                                        <td>{{ audit.auditor_name or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Membership No.:</strong></td>
+                                        <td>{{ audit.auditor_membership_no or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Period:</strong></td>
+                                        <td>
+                                            {{ audit.audit_period_from.strftime('%d/%m/%Y') if audit.audit_period_from else '-' }} -
+                                            {{ audit.audit_period_to.strftime('%d/%m/%Y') if audit.audit_period_to else '-' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Key Findings:</strong></td>
+                                        <td>{{ audit.key_audit_matters or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Recommendations:</strong></td>
+                                        <td>{{ audit.recommendations or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Management Response:</strong></td>
+                                        <td>{{ audit.management_response or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Mgmt Letter Issued:</strong></td>
+                                        <td>{{ 'Yes' if audit.management_letter_issued else 'No' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}

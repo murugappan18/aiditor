@@ -100,6 +100,15 @@ def edit_client(id):
     
     return render_template('clients/form.html', form=form, title='Edit Client', client=client)
 
+@main_bp.route('/clients/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_client(id):
+    client = Client.query.get_or_404(id)
+    db.session.delete(client)
+    db.session.commit()
+    flash('Income Tax Return deleted successfully.', 'success')
+    return redirect(url_for('main.clients'))
+
 # Tax Returns Routes
 @main_bp.route('/tax/income-tax')
 @login_required
@@ -144,22 +153,12 @@ def new_income_tax_return():
 @login_required
 def edit_income_tax_return(itr_id):
     itr = IncomeTaxReturn.query.get_or_404(itr_id)
-    form = IncomeTaxReturnForm()
+    form = IncomeTaxReturnForm(obj=itr)
 
     form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
 
     if form.validate_on_submit():
-        itr.client_id = form.client_id.data
-        itr.assessment_year = form.assessment_year.data
-        itr.return_type = form.return_type.data
-        itr.filing_date = form.filing_date.data
-        itr.due_date = form.due_date.data
-        itr.total_income = form.total_income.data or 0
-        itr.tax_payable = form.tax_payable.data or 0
-        itr.refund_amount = form.refund_amount.data or 0
-        itr.status = form.status.data
-        itr.acknowledgment_number = form.acknowledgment_number.data
-
+        form.populate_obj(itr)
         db.session.commit()
         flash('Income Tax Return updated successfully!', 'success')
     else:
@@ -220,22 +219,12 @@ def new_tds_return():
 @login_required
 def update_tds_return(tds_id):
     tds = TDSReturn.query.get_or_404(tds_id)
-    form = TDSReturnForm()
+    form = TDSReturnForm(obj=tds)
 
     form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
     
     if form.validate_on_submit():
-        tds.client_id = form.client_id.data
-        tds.tan = form.tan.data
-        tds.quarter = form.quarter.data
-        tds.financial_year = form.financial_year.data
-        tds.return_type = form.return_type.data
-        tds.filing_date = form.filing_date.data
-        tds.due_date = form.due_date.data
-        tds.total_tds = form.total_tds.data
-        tds.status = form.status.data
-        tds.token_number = form.token_number.data
-        
+        form.populate_obj(tds)        
         db.session.commit()
         flash('TDS Return updated successfully!', 'success')
     
@@ -294,22 +283,12 @@ def new_gst_return():
 @login_required
 def edit_gst_return(gst_id):
     gst = GSTReturn.query.get_or_404(gst_id)
-    form = GSTReturnForm()
+    form = GSTReturnForm(obj=gst)
 
     form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
 
     if form.validate_on_submit():
-        gst.client_id = form.client_id.data
-        gst.gstin = form.gstin.data
-        gst.return_type = form.return_type.data
-        gst.month_year = form.month_year.data
-        gst.filing_date = form.filing_date.data
-        gst.due_date = form.due_date.data
-        gst.total_sales = form.total_sales.data or 0
-        gst.total_tax = form.total_tax.data or 0
-        gst.status = form.status.data
-        gst.arn_number = form.arn_number.data
-
+        form.populate_obj(gst)
         db.session.commit()
         flash('GST Return updated successfully!', 'success')
     else:
@@ -809,8 +788,11 @@ def roc_forms():
     roc_forms = query.order_by(ROCForm.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
+
+    form = ROCFormForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
     
-    return render_template('compliance/roc_forms.html', roc_forms=roc_forms, search=search, today=date.today())
+    return render_template('compliance/roc_forms.html', roc_forms=roc_forms, Rform=form, search=search, today=date.today())
 
 @main_bp.route('/roc_forms/new', methods=['GET', 'POST'])
 @login_required
@@ -839,6 +821,30 @@ def new_roc_form():
     
     return render_template('compliance/roc_form.html', form=form, title='New ROC Form')
 
+@main_bp.route('/roc_forms/edit/<int:roc_id>', methods=['POST'])
+@login_required
+def edit_roc_form(roc_id):
+    roc_form = ROCForm.query.get_or_404(roc_id)
+    form = ROCFormForm(obj=roc_form)
+
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+
+    if form.validate_on_submit():
+        form.populate_obj(roc_form)        
+        db.session.commit()
+        flash('ROC Form updated successfully!', 'success')
+    
+    return redirect(url_for('main.roc_forms'))
+
+@main_bp.route('/roc_forms/delete/<int:roc_id>', methods=['POST'])
+@login_required
+def delete_roc_form(roc_id):
+    roc_form = ROCForm.query.get_or_404(roc_id)
+    db.session.delete(roc_form)
+    db.session.commit()
+    flash('ROC Form entry deleted successfully.', 'success')
+    return redirect(url_for('main.roc_forms'))
+
 # SFT Returns Routes
 @main_bp.route('/sft_returns')
 @login_required
@@ -856,8 +862,11 @@ def sft_returns():
     sft_returns = query.order_by(SFTReturn.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
+
+    form = SFTReturnForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
     
-    return render_template('compliance/sft_returns.html', sft_returns=sft_returns, search=search, today=date.today())
+    return render_template('compliance/sft_returns.html', sft_returns=sft_returns, Sform=form, search=search, today=date.today())
 
 @main_bp.route('/sft_returns/new', methods=['GET', 'POST'])
 @login_required
@@ -885,6 +894,28 @@ def new_sft_return():
         return redirect(url_for('main.sft_returns'))
     
     return render_template('compliance/sft_return.html', form=form, title='New SFT Return')
+
+@main_bp.route('/sft_returns/<int:sft_id>/edit', methods=['POST'])
+@login_required
+def edit_sft_return(sft_id):
+    sft = SFTReturn.query.get_or_404(sft_id)
+    form = SFTReturnForm(obj=sft)
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+
+    if form.validate_on_submit():
+        form.populate_obj(sft)
+        db.session.commit()
+        flash('SFT Return updated successfully!', 'success')
+    return redirect(url_for('main.sft_returns'))
+
+@main_bp.route('/sft_returns/<int:sft_id>/delete', methods=['POST'])
+@login_required
+def delete_sft_form(sft_id):
+    sft = SFTReturn.query.get_or_404(sft_id)
+    db.session.delete(sft)
+    db.session.commit()
+    flash('SFT Return deleted.', 'success')
+    return redirect(url_for('main.sft_returns'))
 
 # Balance Sheet & Audit Routes
 @main_bp.route('/balance_sheet_audits')
@@ -941,6 +972,29 @@ def new_balance_sheet_audit():
         return redirect(url_for('main.balance_sheet_audits'))
     
     return render_template('compliance/balance_sheet_audits.html', form=form, title='New Balance Sheet & Audit')
+
+@main_bp.route('/balance_sheet_audits/edit/<int:bsa_id>', methods=['GET', 'POST'])
+@login_required
+def edit_balance_sheet_audit(bsa_id):
+    audit = BalanceSheetAudit.query.get_or_404(bsa_id)
+    form = BalanceSheetAuditForm(obj=audit)
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+
+    if form.validate_on_submit():
+        form.populate_obj(audit)
+        db.session.commit()
+        flash('Audit Report updated successfully.', 'success')
+
+    return redirect(url_for('main.balance_sheet_audits'))
+
+@main_bp.route('/balance_sheet_audits/delete/<int:bsa_id>', methods=['POST'])
+@login_required
+def delete_balance_sheet_audit(bsa_id):
+    audit = BalanceSheetAudit.query.get_or_404(bsa_id)
+    db.session.delete(audit)
+    db.session.commit()
+    flash('Audit Report deleted successfully.', 'success')
+    return redirect(url_for('main.balance_sheet_audits'))
 
 # CMA Reports Routes
 @main_bp.route('/cma_reports')

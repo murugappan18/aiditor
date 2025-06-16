@@ -98,12 +98,21 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary btn-sm" title="Edit">
+                                <!-- Edit Button -->
+                                <button class="btn btn-outline-primary" title="Edit" 
+                                        data-bs-toggle="modal" data-bs-target="#editROCModal{{ form.id }}">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-outline-info btn-sm" title="View Details">
+                                <button class="btn btn-outline-info btn-sm" title="View Details"
+                                        data-bs-toggle="modal" data-bs-target="#rocModal{{ form.id }}">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                <!-- Delete Button -->
+                                <form method="POST" action="{{ url_for('main.delete_roc_form', roc_id=form.id) }}" onsubmit="return confirm('Are you sure you want to delete this GST?');" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -123,6 +132,187 @@
         {% endif %}
     </div>
 </div>
+
+<!-- ROC Edit Modal -->
+{% if roc_forms and roc_forms.items %}
+    {% for roc in roc_forms.items %}
+        <div class="modal fade" id="editROCModal{{ roc.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <form method="POST" action="{{ url_for('main.edit_roc_form', roc_id=roc.id) }}">
+                        {{ Rform.hidden_tag() }}
+                        <input type="hidden" name="roc_id" value="{{ roc.id }}">
+                        
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit ROC Form - {{ roc.client.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ Rform.client_id.label(class="form-label") }}
+                                    <select class="form-select" name="client_id">
+                                        {% for id, name in Rform.client_id.choices %}
+                                            <option value="{{ id }}" {% if id == roc.client_id %}selected{% endif %}>{{ name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    {{ Rform.form_type.label(class="form-label") }}
+                                    <select class="form-select" name="form_type">
+                                        {% for val, label in Rform.form_type.choices %}
+                                            <option value="{{ val }}" {% if val == roc.form_type %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ Rform.financial_year.label(class="form-label") }}
+                                    <input type="text" name="financial_year" class="form-control" value="{{ roc.financial_year }}">
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    {{ Rform.due_date.label(class="form-label") }}
+                                    <input type="date" name="due_date" class="form-control" value="{{ roc.due_date }}">
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    {{ Rform.filing_date.label(class="form-label") }}
+                                    <input type="date" name="filing_date" class="form-control" value="{{ roc.filing_date }}">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ Rform.status.label(class="form-label") }}
+                                    <select class="form-select" name="status">
+                                        {% for val, label in Rform.status.choices %}
+                                            <option value="{{ val }}" {% if val == roc.status %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    {{ Rform.filing_fee.label(class="form-label") }}
+                                    <input type="number" step="0.01" name="filing_fee" class="form-control" value="{{ roc.filing_fee }}">
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    {{ Rform.late_fee.label(class="form-label") }}
+                                    <input type="number" step="0.01" name="late_fee" class="form-control" value="{{ roc.late_fee }}">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ Rform.acknowledgment_number.label(class="form-label") }}
+                                <input type="text" name="acknowledgment_number" class="form-control" value="{{ roc.acknowledgment_number }}">
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update ROC Form</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ROC Form Details Modals -->
+{% if roc_forms and roc_forms.items %}
+    {% for roc in roc_forms.items %}
+        <div class="modal fade" id="rocModal{{ roc.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">ROC Form Details - {{ roc.client.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Client Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Name:</strong></td>
+                                        <td>{{ roc.client.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>PAN:</strong></td>
+                                        <td>{{ roc.client.pan or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>{{ roc.client.email or '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Form Details</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Form Type:</strong></td>
+                                        <td>{{ roc.form_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Financial Year:</strong></td>
+                                        <td>{{ roc.financial_year }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if roc.status == 'Approved' else 'warning' if roc.status == 'Pending' else 'info' }}">
+                                                {{ roc.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Due Date:</strong></td>
+                                        <td>{{ roc.due_date.strftime('%d/%m/%Y') if roc.due_date else '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Filing Date:</strong></td>
+                                        <td>{{ roc.filing_date.strftime('%d/%m/%Y') if roc.filing_date else '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6>Fee & Acknowledgment Details</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Filing Fee:</strong></td>
+                                        <td>₹{{ "{:,.2f}".format(roc.filing_fee or 0) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Late Fee:</strong></td>
+                                        <td>₹{{ "{:,.2f}".format(roc.late_fee or 0) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Acknowledgment Number:</strong></td>
+                                        <td><code>{{ roc.acknowledgment_number or '-' }}</code></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
