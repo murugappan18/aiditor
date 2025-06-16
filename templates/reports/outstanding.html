@@ -117,11 +117,11 @@
                         </thead>
                         <tbody>
                             {% for fee in outstanding.items %}
-                                <tr class="{{ 'table-danger' if fee.due_date and fee.due_date < date.today() and fee.status == 'Pending' else '' }}">
+                                <tr class="{{ 'table-danger' if fee.due_date and fee.due_date < today and fee.status == 'Pending' else '' }}">
                                     <td>
                                         <strong>{{ fee.client.name }}</strong>
                                         {% if fee.client.phone %}
-                                            <br><small class="text-muted">{{ fee.client.phone }}</small>
+                                            <br><small class="fw-bold">{{ fee.client.phone }}</small>
                                         {% endif %}
                                     </td>
                                     <td>{{ fee.service_type }}</td>
@@ -142,7 +142,7 @@
                                     </td>
                                     <td>
                                         {% if fee.due_date and fee.status == 'Pending' %}
-                                            {% set days_diff = (date.today() - fee.due_date).days %}
+                                            {% set days_diff = (today - fee.due_date).days %}
                                             {% if days_diff > 0 %}
                                                 <span class="badge bg-danger">{{ days_diff }} days</span>
                                             {% elif days_diff == 0 %}
@@ -248,7 +248,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="outstandingTrendChart" height="100"></canvas>
+                    <canvas id="outstandingTrendChart" style="background-color: transparent;"></canvas>
                 </div>
             </div>
         </div>
@@ -261,7 +261,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="statusBreakdownChart"></canvas>
+                    <canvas id="statusBreakdownChart" style="background-color: transparent;"></canvas>
                 </div>
             </div>
         </div>
@@ -389,18 +389,22 @@
     function generateOutstandingReport() {
         window.location.href = '/api/reports/outstanding/export';
     }
+
+    const trendLabels = {{ trend_labels | tojson | safe }};
+    const trendData = {{ trend_data | tojson | safe }};
+    const statusData = {{ status_data | tojson | safe }};
     
     function initOutstandingTrendChart() {
         const ctx = document.getElementById('outstandingTrendChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                labels: trendLabels,
                 datasets: [{
                     label: 'Outstanding Amount',
-                    data: [50000, 45000, 60000, 35000, 40000, 30000],
-                    borderColor: 'var(--bs-danger)',
-                    backgroundColor: 'var(--bs-danger)',
+                    data: trendData,
+                    borderColor: '#e74c3c',
+                    backgroundColor: '#e74c3c',
                     fill: false
                 }]
             },
@@ -409,25 +413,21 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        labels: {
-                            color: 'var(--bs-body-color)'
-                        }
+                        labels: { color: '#ffffff' }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            color: 'var(--bs-body-color)',
+                            color: '#ffffff',
                             callback: function(value) {
                                 return '₹' + value.toLocaleString();
                             }
                         }
                     },
                     x: {
-                        ticks: {
-                            color: 'var(--bs-body-color)'
-                        }
+                        ticks: { color: '#ffffff' }
                     }
                 }
             }
@@ -439,14 +439,10 @@
         new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Pending', 'Overdue', 'Paid'],
+                labels: Object.keys(statusData),
                 datasets: [{
-                    data: [12, 5, 25],
-                    backgroundColor: [
-                        'var(--bs-warning)',
-                        'var(--bs-danger)',
-                        'var(--bs-success)'
-                    ]
+                    data: Object.values(statusData),
+                    backgroundColor: ['#f39c12', '#e74c3c', '#2ecc71']
                 }]
             },
             options: {
@@ -455,9 +451,7 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: {
-                            color: 'var(--bs-body-color)'
-                        }
+                        labels: { color: '#ffffff' }
                     }
                 }
             }

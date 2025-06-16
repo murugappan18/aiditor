@@ -164,19 +164,20 @@ class OutstandingFee(db.Model):
 
 
 
-class AuditReport(db.Model):
-    __tablename__ = 'audit_reports'
+# class AuditReport(db.Model):
+#     __tablename__ = 'audit_reports'
     
-    id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
-    report_type = Column(String(50))  # Statutory Audit, Tax Audit, etc.
-    financial_year = Column(String(10), nullable=False)
-    report_date = Column(Date)
-    findings = Column(Text)
-    recommendations = Column(Text)
-    status = Column(String(20), default='Draft')  # Draft, Final, Submitted
-    created_at = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(Integer, ForeignKey('users.id'))
+#     id = Column(Integer, primary_key=True)
+#     client = db.relationship('Client', backref='audit_reports') # Establishing relationship with Client
+#     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+#     report_type = Column(String(50))  # Statutory Audit, Tax Audit, etc.
+#     financial_year = Column(String(10), nullable=False)
+#     report_date = Column(Date)
+#     findings = Column(Text)
+#     recommendations = Column(Text)
+#     status = Column(String(20), default='Draft')  # Draft, Final, Submitted
+#     created_at = Column(DateTime, default=datetime.utcnow)
+#     created_by = Column(Integer, ForeignKey('users.id'))
 
 class ROCForm(db.Model):
     __tablename__ = 'roc_forms'
@@ -220,29 +221,24 @@ class BalanceSheetAudit(db.Model):
     financial_year = Column(String(10), nullable=False)
     audit_type = Column(String(50))  # Statutory, Tax, Internal, etc.
     balance_sheet_date = Column(Date)
-    audit_completion_date = Column(Date)
     auditor_name = Column(String(200))
     auditor_membership_no = Column(String(20))
     opinion_type = Column(String(50))  # Unqualified, Qualified, Adverse, Disclaimer
     key_audit_matters = Column(Text)
+    recommendations = Column(Text)
+    audit_period_from = Column(Date)
+    audit_period_to = Column(Date)
+    management_response = Column(Text)
     management_letter_issued = Column(Boolean, default=False)
     status = Column(String(20), default='In Progress')
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
-    
-      
-
-
-
 
 class CMAReport(db.Model):
     __tablename__ = 'cma_reports'
     
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
-
-    
-
     reporting_period = Column(String(20), nullable=False)  # Monthly, Quarterly, Annual
     report_date = Column(Date)
     working_capital_limit = Column(Float, default=0)
@@ -286,7 +282,6 @@ class XBRLReport(db.Model):
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
     client = db.relationship('Client', backref='xbrl_reports')
-
     financial_year = Column(String(10), nullable=False)
     report_type = Column(String(50))  # Balance Sheet, P&L, Cash Flow
     filing_category = Column(String(50))  # Individual, Company, LLP
@@ -323,6 +318,7 @@ class DocumentChecklist(db.Model):
     __tablename__ = 'document_checklists'
     
     id = Column(Integer, primary_key=True)
+    client = db.relationship('Client', backref='document_checklists')
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
     checklist_name = Column(String(200), nullable=False)
     service_type = Column(String(100))  # ITR, GST, Audit, ROC
@@ -332,9 +328,7 @@ class DocumentChecklist(db.Model):
     due_date = Column(Date)
     status = Column(String(20), default='Pending')
     created_at = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(Integer, ForeignKey('users.id'))
-
-    client = db.relationship('Client', backref='document_checklists')
+    created_by = Column(Integer, ForeignKey('users.id'))    
 
 class ReturnTracker(db.Model):
     __tablename__ = 'return_tracker'
@@ -434,6 +428,7 @@ class Reminder(db.Model):
     
     id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('clients.id'))
+    client = relationship("Client", backref="reminders")
     title = Column(String(200), nullable=False)
     description = Column(Text)
     reminder_date = Column(DateTime, nullable=False)

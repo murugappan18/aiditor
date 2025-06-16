@@ -31,6 +31,13 @@ login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
 
+@app.context_processor
+def utility_processor():
+    def getattr_safe(obj, attr, default=False):
+        return getattr(obj, attr, default)
+    return dict(getattr=getattr_safe)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     from models import User

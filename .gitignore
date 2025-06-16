@@ -3,11 +3,13 @@ Include/
 Lib/
 Scripts/
 __pycache__/
+uploads/
 
 # Ignore a specific file in the root directory
 pyvenv.cfg
 
 # Ignore SQLite DB
+var/app-instance/audit_system.db
 *.db
 
 # Virtual environments

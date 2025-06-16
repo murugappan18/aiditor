@@ -5,9 +5,10 @@ from app import db
 from models import *
 from forms import *
 from utils import allowed_file, save_uploaded_file
-import os
 from datetime import datetime, date, timedelta
-from sqlalchemy import func, or_
+from sqlalchemy import func, extract, or_
+from collections import OrderedDict
+from calendar import month_abbr
 
 main_bp = Blueprint('main', __name__)
 
@@ -140,6 +141,43 @@ def new_income_tax_return():
     
     return render_template('tax/income_tax.html', form=form, returns=None)
 
+@main_bp.route('/tax/income-tax/edit/<int:itr_id>', methods=['POST'])
+@login_required
+def edit_income_tax_return(itr_id):
+    itr = IncomeTaxReturn.query.get_or_404(itr_id)
+    form = IncomeTaxReturnForm()
+
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+
+    if form.validate_on_submit():
+        itr.client_id = form.client_id.data
+        itr.assessment_year = form.assessment_year.data
+        itr.return_type = form.return_type.data
+        itr.filing_date = form.filing_date.data
+        itr.due_date = form.due_date.data
+        itr.total_income = form.total_income.data or 0
+        itr.tax_payable = form.tax_payable.data or 0
+        itr.refund_amount = form.refund_amount.data or 0
+        itr.status = form.status.data
+        itr.acknowledgment_number = form.acknowledgment_number.data
+
+        db.session.commit()
+        flash('Income Tax Return updated successfully!', 'success')
+    else:
+        flash('Failed to update ITR. Please check form input.', 'danger')
+
+    return redirect(url_for('main.income_tax_returns'))
+
+@main_bp.route('/tax/income-tax/delete/<int:itr_id>', methods=['POST'])
+@login_required
+def delete_income_tax_return(itr_id):
+    itr = IncomeTaxReturn.query.get_or_404(itr_id)
+    db.session.delete(itr)
+    db.session.commit()
+    flash('Income Tax Return deleted successfully.', 'success')
+    return redirect(url_for('main.income_tax_returns'))
+
+#TDS Returns Routes
 @main_bp.route('/tax/tds')
 @login_required
 def tds_returns():
@@ -179,6 +217,41 @@ def new_tds_return():
     
     return render_template('tax/tds.html', form=form, returns=None)
 
+@main_bp.route('/tax/tds/update/<int:tds_id>', methods=['POST'])
+@login_required
+def update_tds_return(tds_id):
+    tds = TDSReturn.query.get_or_404(tds_id)
+    form = TDSReturnForm()
+
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+    
+    if form.validate_on_submit():
+        tds.client_id = form.client_id.data
+        tds.tan = form.tan.data
+        tds.quarter = form.quarter.data
+        tds.financial_year = form.financial_year.data
+        tds.return_type = form.return_type.data
+        tds.filing_date = form.filing_date.data
+        tds.due_date = form.due_date.data
+        tds.total_tds = form.total_tds.data
+        tds.status = form.status.data
+        tds.token_number = form.token_number.data
+        
+        db.session.commit()
+        flash('TDS Return updated successfully!', 'success')
+    
+    return redirect(url_for('main.tds_returns'))
+
+@main_bp.route('/tax/tds/delete/<int:tds_id>', methods=['POST'])
+@login_required
+def delete_tds_return(tds_id):
+    tds = TDSReturn.query.get_or_404(tds_id)
+    db.session.delete(tds)
+    db.session.commit()
+    flash('TDS Return deleted successfully!', 'success')
+    return redirect(url_for('main.tds_returns'))
+
+# GST Returns Routes
 @main_bp.route('/tax/gst')
 @login_required
 def gst_returns():
@@ -217,6 +290,42 @@ def new_gst_return():
         return redirect(url_for('main.gst_returns'))
     
     return render_template('tax/gst.html', form=form, returns=None)
+
+@main_bp.route('/tax/gst/edit/<int:gst_id>', methods=['POST'])
+@login_required
+def edit_gst_return(gst_id):
+    gst = GSTReturn.query.get_or_404(gst_id)
+    form = GSTReturnForm()
+
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+
+    if form.validate_on_submit():
+        gst.client_id = form.client_id.data
+        gst.gstin = form.gstin.data
+        gst.return_type = form.return_type.data
+        gst.month_year = form.month_year.data
+        gst.filing_date = form.filing_date.data
+        gst.due_date = form.due_date.data
+        gst.total_sales = form.total_sales.data or 0
+        gst.total_tax = form.total_tax.data or 0
+        gst.status = form.status.data
+        gst.arn_number = form.arn_number.data
+
+        db.session.commit()
+        flash('GST Return updated successfully!', 'success')
+    else:
+        flash('Failed to update GST Return.', 'danger')
+
+    return redirect(url_for('main.gst_returns'))
+
+@main_bp.route('/tax/gst/delete/<int:gst_id>', methods=['POST'])
+@login_required
+def delete_gst_return(gst_id):
+    gst = GSTReturn.query.get_or_404(gst_id)
+    db.session.delete(gst)
+    db.session.commit()
+    flash('GST Return deleted successfully!', 'success')
+    return redirect(url_for('main.gst_returns'))
 
 # Employee Management Routes
 @main_bp.route('/admin/employees')
@@ -349,24 +458,61 @@ def new_document():
 @login_required
 def outstanding_reports():
     page = request.args.get('page', 1, type=int)
-    outstanding_pagination = OutstandingFee.query.join(Client).filter_by(status='Pending').order_by(OutstandingFee.due_date).paginate(
+    outstanding_pagination = OutstandingFee.query.join(Client, Client.id == OutstandingFee.client_id).order_by(OutstandingFee.due_date).paginate(
         page=page, per_page=20, error_out=False
     )
+
+    today = date.today()
+    month = today.month
+    year = today.year
+
+    # Add below these lines:
+    pending_count = OutstandingFee.query.filter_by(status='Pending').count()
+
+    this_month_collection = db.session.query(func.sum(OutstandingFee.amount)) \
+        .filter_by(status='Paid') \
+        .filter(extract('month', OutstandingFee.created_at) == month) \
+        .filter(extract('year', OutstandingFee.created_at) == year) \
+        .scalar() or 0
     
     # Calculate totals
-    total_outstanding = db.session.query(func.sum(OutstandingFee.amount)).filter_by(status='Pending').scalar() or 0
+    total_outstanding = db.session.query(func.sum(OutstandingFee.amount)).scalar() or 0
     overdue_count = OutstandingFee.query.filter(
-        OutstandingFee.status == 'Pending',
+        OutstandingFee.status == 'Overdue',
         OutstandingFee.due_date < date.today()
     ).count()
 
     form = OutstandingFeeForm()
     form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+
+    trend_data = OrderedDict()
+    for i in range(5, -1, -1):  # last 6 months
+        month_date = today - timedelta(days=i*30)
+        key = month_abbr[month_date.month]
+        total = db.session.query(func.sum(OutstandingFee.amount)).filter(
+            extract('month', OutstandingFee.created_at) == month_date.month,
+            extract('year', OutstandingFee.created_at) == month_date.year
+        ).scalar() or 0
+        trend_data[key] = total
+
+    # Status Breakdown
+    status_data = {
+        'Pending': OutstandingFee.query.filter_by(status='Pending').count(),
+        'Overdue': OutstandingFee.query.filter_by(status='Overdue').count(),
+        'Paid': OutstandingFee.query.filter_by(status='Paid').count()
+    }
     
-    return render_template('reports/outstanding.html', form=form, 
-                         outstanding=outstanding_pagination,
-                         total_outstanding=total_outstanding,
-                         overdue_count=overdue_count)
+    return render_template('reports/outstanding.html', 
+                        form=form, 
+                        outstanding=outstanding_pagination,
+                        total_outstanding=total_outstanding,
+                        overdue_count=overdue_count,
+                        pending_count=pending_count,
+                        today=today,
+                        this_month_collection=this_month_collection,
+                        trend_data=list(trend_data.values()),
+                        trend_labels=list(trend_data.keys()),
+                        status_data=status_data)
 
 @main_bp.route('/reports/outstanding/new', methods=['GET', 'POST'])
 @login_required
@@ -745,6 +891,9 @@ def new_sft_return():
 @main_bp.route('/balance_sheet_audits')
 @login_required
 def balance_sheet_audits():
+    form = BalanceSheetAuditForm()
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.all()]
+
     search = request.args.get('search', '')
     page = request.args.get('page', 1, type=int)
     
@@ -758,9 +907,8 @@ def balance_sheet_audits():
     audits = query.order_by(BalanceSheetAudit.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-    
-    return render_template('compliance/balance_sheet_audits.html', audits=audits, search=search)
 
+    return render_template('compliance/balance_sheet_audits.html', form=form, audits=audits, search=search)
 
 
 @main_bp.route('/balance_sheet_audits/new', methods=['GET', 'POST'])
@@ -775,11 +923,14 @@ def new_balance_sheet_audit():
             financial_year=form.financial_year.data,
             audit_type=form.audit_type.data,
             balance_sheet_date=form.balance_sheet_date.data,
-            audit_completion_date=form.audit_completion_date.data,
             auditor_name=form.auditor_name.data,
             auditor_membership_no=form.auditor_membership_no.data,
             opinion_type=form.opinion_type.data,
             key_audit_matters=form.key_audit_matters.data,
+            recommendations=form.recommendations.data,
+            audit_period_from=form.audit_period_from.data,
+            audit_period_to=form.audit_period_to.data,
+            management_response=form.management_response.data,
             management_letter_issued=form.management_letter_issued.data,
             status=form.status.data,
             created_by=current_user.id
@@ -790,7 +941,7 @@ def new_balance_sheet_audit():
         flash('Balance Sheet & Audit entry created successfully!', 'success')
         return redirect(url_for('main.balance_sheet_audits'))
     
-    return render_template('compliance/audit.html', form=form, title='New Balance Sheet & Audit')
+    return render_template('compliance/balance_sheet_audits.html', form=form, title='New Balance Sheet & Audit')
 
 # CMA Reports Routes
 @main_bp.route('/cma_reports')
@@ -981,15 +1132,19 @@ def new_xbrl_report():
     file_path = None  # Initialize before block
     if form.validate_on_submit():
         if form.xbrl_file.data:
+<<<<<<< HEAD
             file_path, file_size = save_uploaded_file(form.xbrl_file.data, 'xbrl')
             print(f"File saved to: {file_path}")  # For debugging
 
+=======
+            xbrl_file_path, file_size = save_uploaded_file(form.xbrl_file.data)  # ✅ Unpack tuple
+>>>>>>> c618d3ff67d4e46938fcff74231e9826fa12bccf
         xbrl_report = XBRLReport(
             client_id=form.client_id.data,
             financial_year=form.financial_year.data,
             report_type=form.report_type.data,
             filing_category=form.filing_category.data,
-            xbrl_file_path=file_path,
+            xbrl_file_path=xbrl_file_path,
             validation_status=form.validation_status.data,
             validation_errors=form.validation_errors.data,
             filing_date=form.filing_date.data,
@@ -1279,8 +1434,71 @@ def add_return():
 @main_bp.route('/smart/auto-reminders')
 @login_required
 def auto_reminders():
-    auto_reminders = Reminder.query.filter_by(auto_created=True).order_by(Reminder.reminder_date).all()
-    return render_template('smart/auto_reminders.html', auto_reminders=auto_reminders)
+    settings = AutoReminderSetting.query.filter_by(user_id=current_user.id).first()
+
+    reminders = Reminder.query.filter_by(created_by=current_user.id, auto_created=True).all()
+
+    formatted_rules = []
+    active_count = 0
+
+    for r in reminders:
+        if r.status == 'Active':
+            active_count += 1
+        formatted_rules.append({
+            'title': r.title,
+            'reminder_type': r.reminder_type,
+            'days_before': (datetime.utcnow() - r.reminder_date).days,
+            'method': r.description,
+            'method_class': 'bg-info' if 'email' in r.description.lower() else 'bg-warning',
+            'field': r.reminder_type.lower()
+        })
+
+    return render_template(
+        'smart/auto_reminders.html',
+        settings=settings,
+        rules=formatted_rules,
+        active_count=active_count
+    )
+
+
+
+
+@main_bp.route('/smart/auto-reminders/add', methods=['POST'])
+@login_required
+def save_auto_reminder():
+    name = request.form.get('rule_name')
+    trigger = request.form.get('trigger_type')
+    days = int(request.form.get('days', 0))
+    day_type = request.form.get('dayType')
+    method = request.form.get('method')
+    status = request.form.get('status')
+
+    message = request.form.get('messageTemplate', '')
+
+    base_date = datetime.utcnow()
+    if day_type == 'before':
+        reminder_date = base_date - timedelta(days=days)
+    elif day_type == 'after':
+        reminder_date = base_date + timedelta(days=days)
+    else:
+        reminder_date = base_date
+
+    reminder = Reminder(
+    created_by=current_user.id,
+    title=name,
+    description=message or method,
+    reminder_type=trigger,
+    reminder_date=reminder_date,
+    status = request.form.get('status', 'Active').capitalize(),
+    auto_created=True
+)
+
+
+    db.session.add(reminder)
+    db.session.commit()
+
+    return redirect(url_for('main.auto_reminders'))
+
 
 # Enhanced CRM Routes
 @main_bp.route('/crm/client-search')
