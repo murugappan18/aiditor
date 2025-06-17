@@ -172,14 +172,21 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
+                                           <!-- Edit Button -->
                                             <button class="btn btn-outline-primary" title="Edit" 
-                                                    onclick="editEmployee({{ employee.id }})">
+                                                    data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee.id }}">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button class="btn btn-outline-info" title="View Details" 
                                                     data-bs-toggle="modal" data-bs-target="#employeeModal{{ employee.id }}">
                                                 <i class="fas fa-eye"></i>
                                             </button>
+                                            <!-- Delete Button -->
+                                            <form method="POST" action="{{ url_for('main.delete_employee', id=employee.id) }}" onsubmit="return confirm('Are you sure you want to delete this Employee?');" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
                                             <button class="btn btn-outline-success" title="Payroll History" 
                                                     onclick="viewPayrollHistory({{ employee.id }})">
                                                 <i class="fas fa-money-check-alt"></i>
@@ -321,6 +328,93 @@
     </div>
 </div>
 
+<!-- Edit Employee Modal -->
+{% if employees and employees.items %}
+    {% for employee in employees.items %}
+    <div class="modal fade" id="editEmployeeModal{{ employee.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('main.edit_employee', id=employee.id) }}">
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="id" value="{{ employee.id }}">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Employee - {{ employee.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                {{ form.name.label(class="form-label") }}
+                                <input type="text" name="name" class="form-control" value="{{ employee.name }}">
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.employee_id.label(class="form-label") }}
+                                <input type="text" name="employee_id" class="form-control" value="{{ employee.employee_id }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.email.label(class="form-label") }}
+                                <input type="text" name="email" class="form-control" value="{{ employee.email }}">
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.phone.label(class="form-label") }}
+                                <input type="text" name="phone" class="form-control" value="{{ employee.phone }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.pan.label(class="form-label") }}
+                                <input type="text" name="pan" class="form-control" value="{{ employee.pan }}">
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.date_of_joining.label(class="form-label") }}
+                                <input type="date" name="date_of_joining" class="form-control" value="{{ employee.date_of_joining }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.designation.label(class="form-label") }}
+                                <input type="text" name="designation" class="form-control" value="{{ employee.designation }}">
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.department.label(class="form-label") }}
+                                <input type="text" name="department" class="form-control" value="{{ employee.department }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.salary.label(class="form-label") }}
+                                <input type="text" name="salary" class="form-control" value="{{ employee.salary }}">
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.status.label(class="form-label") }}
+                                <select class="form-select" name="status">
+                                    {% for val, label in form.status.choices %}
+                                        <option value="{{ val }}" {% if val == employee.status %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Employee</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
 <!-- Employee Detail Modals -->
 {% if employees and employees.items %}
     {% for employee in employees.items %}
@@ -390,7 +484,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-primary" onclick="editEmployee({{ employee.id }})">Edit Employee</button>
+                        <button type="button" class="btn btn-outline-primary" title="Edit" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee.id }}">Edit Employee</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
@@ -419,10 +513,6 @@
             console.log('Filtering employees');
         });
     });
-    
-    function editEmployee(id) {
-        alert('Edit functionality to be implemented for Employee ID: ' + id);
-    }
     
     function viewPayrollHistory(id) {
         alert('Payroll history functionality to be implemented for Employee ID: ' + id);

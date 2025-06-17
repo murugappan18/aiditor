@@ -344,6 +344,29 @@ def new_employee():
     
     return render_template('admin/employees.html', form=form, employees=None)
 
+@main_bp.route('/admin/employees/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_employee(id):
+    employee = Employee.query.get_or_404(id)
+    form = EmployeeForm(obj=employee)
+
+    if form.validate_on_submit():
+        form.populate_obj(employee)
+        db.session.commit()
+        flash('Employee updated successfully!', 'success')
+        return redirect(url_for('main.employees'))
+
+    return render_template('admin/employees.html', form=form, employee=employee, edit=True)
+
+@main_bp.route('/admin/employees/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_employee(id):
+    employee = Employee.query.get_or_404(id)
+    db.session.delete(employee)
+    db.session.commit()
+    flash('Employee deleted successfully!', 'success')
+    return redirect(url_for('main.employees'))
+
 # Payroll Management Routes
 @main_bp.route('/admin/payroll')
 @login_required
