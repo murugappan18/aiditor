@@ -1440,6 +1440,7 @@ def return_tracker():
 @login_required
 def add_return():
     try:
+        return_id = request.form.get('return_id')
         client_id = request.form.get('client_id')
         return_type = request.form.get('return_type')
         period = request.form.get('period')
@@ -1449,26 +1450,35 @@ def add_return():
         ack_number = request.form.get('acknowledgment_number')
         remarks = request.form.get('remarks')
 
-        # Convert dates to proper format
         due_date = datetime.strptime(due_date, '%Y-%m-%d').date() if due_date else None
         filing_date = datetime.strptime(filing_date, '%Y-%m-%d').date() if filing_date else None
 
-        new_return = ReturnTracker(
-            client_id=int(client_id),
-            return_type=return_type,
-            period=period,
-            due_date=due_date,
-            filing_date=filing_date,
-            status=status,
-            acknowledgment_number=ack_number,
-            remarks=remarks
-        )
-        db.session.add(new_return)
+        if return_id:
+            # Edit existing
+            rtn = ReturnTracker.query.get(int(return_id))
+            if not rtn:
+                flash("Return not found.", "danger")
+                return redirect(url_for('main.return_tracker'))
+        else:
+            # New
+            rtn = ReturnTracker()
+            db.session.add(rtn)
+
+        # Common fields
+        rtn.client_id = int(client_id)
+        rtn.return_type = return_type
+        rtn.period = period
+        rtn.due_date = due_date
+        rtn.filing_date = filing_date
+        rtn.status = status
+        rtn.acknowledgment_number = ack_number
+        rtn.remarks = remarks
+
         db.session.commit()
-        flash("New return successfully added.", "success")
+        flash("Return saved successfully.", "success")
     except Exception as e:
         db.session.rollback()
-        flash(f"Error adding return: {str(e)}", "danger")
+        flash(f"Error saving return: {str(e)}", "danger")
 
     return redirect(url_for('main.return_tracker'))
 
