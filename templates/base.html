@@ -34,66 +34,13 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    
-                    <!-- Client Management -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-users me-1"></i>Clients
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('main.clients') }}">All Clients</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.new_client') }}">Add Client</a></li>
-                        </ul>
-                    </li>
-                    
-                    <!-- Tax Returns -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-file-invoice me-1"></i>Tax Returns
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('main.income_tax_returns') }}">Income Tax</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.tds_returns') }}">TDS Returns</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.gst_returns') }}">GST Returns</a></li>
-                        </ul>
-                    </li>
-                    
-                    <!-- Administration -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-cog me-1"></i>Administration
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('main.employees') }}">Employees</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.payroll') }}">Payroll</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.documents') }}">Documents</a></li>
-                        </ul>
-                    </li>
-                    
-                    <!-- Reports -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-chart-bar me-1"></i>Reports
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('main.outstanding_reports') }}">Outstanding Fees</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-user me-1"></i>{{ current_user.username }}
                             </a>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 {% if current_user.role.name == 'admin' %}
                                     <li><a class="dropdown-item" href="{{ url_for('main.users') }}">User Management</a></li>
                                     <li><hr class="dropdown-divider"></li>
@@ -302,7 +249,7 @@
             </nav>
 
             <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <!-- Flash Messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
