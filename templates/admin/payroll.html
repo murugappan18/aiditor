@@ -139,14 +139,21 @@
                                     <td class="fw-bold">₹{{ "{:,.2f}".format(entry.net_salary or 0) }}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
+                                            <!-- Edit Button -->
                                             <button class="btn btn-outline-primary" title="Edit" 
-                                                    onclick="editPayroll({{ entry.id }})">
+                                                    data-bs-toggle="modal" data-bs-target="#editPayrollModal{{entry.id}}">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-outline-info" title="View Payslip" 
-                                                    onclick="viewPayslip({{ entry.id }})">
+                                            <button class="btn btn-outline-info" title="View Details" 
+                                                    data-bs-toggle="modal" data-bs-target="#payrollModal{{ entry.id }}">
                                                 <i class="fas fa-file-alt"></i>
                                             </button>
+                                            <!-- Delete Button -->
+                                            <form method="POST" action="{{ url_for('main.delete_payroll_entry', id=entry.id) }}" onsubmit="return confirm('Are you sure you want to delete this Payroll?');" style="display:inline;">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
                                             <button class="btn btn-outline-success" title="Download PDF" 
                                                     onclick="downloadPayslip({{ entry.id }})">
                                                 <i class="fas fa-download"></i>
@@ -281,6 +288,174 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Employee Modal -->
+{% if payroll and payroll.items %}
+    {% for entry in payroll.items %}
+    <div class="modal fade" id="editPayrollModal{{ entry.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('main.edit_payroll_entry', id=entry.id) }}">
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="id" value="{{ entry.id }}">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Payroll - {{ entry.employee.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.employee_id.label(class="form-label") }}
+                                <select class="form-select" name="employee_id">
+                                    {% for val, label in form.employee_id.choices %}
+                                        <option value="{{ val }}" {% if val == entry.employee_id %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.month_year.label(class="form-label") }}
+                                <input type="text" name="month_year" class="form-control" value="{{ entry.month_year }}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.basic_salary.label(class="form-label") }}
+                                <input type="text" name="basic_salary" class="form-control" id="editbasicSalary" value="{{ entry.basic_salary }}">
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.allowances.label(class="form-label") }}
+                                <input type="text" name="allowances" class="form-control" id="editallowances" value="{{ entry.allowances }}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                {{ form.deductions.label(class="form-label") }}
+                                <input type="text" name="deductions" class="form-control" id="editdeductions" value="{{ entry.deductions }}">
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.pf_deduction.label(class="form-label") }}
+                                <input type="text" name="pf_deduction" class="form-control" id="editpfDeduction" value="{{ entry.pf_deduction }}">
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.tds_deduction.label(class="form-label") }}
+                                <input type="text" name="tds_deduction" class="form-control" id="edittdsDeduction" value="{{ entry.tds_deduction }}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Net Salary</label>
+                                <input type="text" class="form-control fw-bold" id="editnetSalary" value="₹{{ '{:,.2f}'.format(entry.net_salary) }}" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Auto-calculation:</strong> Net Salary = Basic Salary + Allowances - Deductions - PF - TDS
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Payroll</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Payroll Entry View Modals -->
+{% if payroll and payroll.items %}
+    {% for entry in payroll.items %}
+        <div class="modal fade" id="payrollModal{{ entry.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ entry.employee.name }} - Payroll Details ({{ entry.month_year }})</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Employee Info</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Name:</strong></td>
+                                        <td>{{ entry.employee.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Employee ID:</strong></td>
+                                        <td>{{ entry.employee.employee_id or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Employee Email:</strong></td>
+                                        <td>{{ entry.employee.email or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Employee Phone:</strong></td>
+                                        <td>{{ entry.employee.phone or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Employee PAN:</strong></td>
+                                        <td>{{ entry.employee.pan or '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Designation:</strong></td>
+                                        <td>{{ entry.employee.designation or '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Payroll Info</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Month/Year:</strong></td>
+                                        <td>{{ entry.month_year }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Basic Salary:</strong></td>
+                                        <td>₹{{ "{:,.2f}".format(entry.basic_salary or 0) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Allowances:</strong></td>
+                                        <td>₹{{ "{:,.2f}".format(entry.allowances or 0) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Deductions:</strong></td>
+                                        <td>₹{{ "{:,.2f}".format(entry.deductions or 0) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>PF Deduction:</strong></td>
+                                        <td>₹{{ "{:,.2f}".format(entry.pf_deduction or 0) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>TDS Deduction:</strong></td>
+                                        <td>₹{{ "{:,.2f}".format(entry.tds_deduction or 0) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Net Salary:</strong></td>
+                                        <td class="fw-bold text-success">₹{{ "{:,.2f}".format(entry.net_salary or 0) }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-primary" title="Edit Payroll" data-bs-toggle="modal" data-bs-target="#editPayrollModal{{ entry.id }}">Edit Payroll</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
@@ -298,7 +473,7 @@
         
         // Auto-calculate net salary
         $('#basicSalary, #allowances, #deductions, #pfDeduction, #tdsDeduction').on('input', calculateNetSalary);
-        
+
         // Month filter
         $('#monthFilter').on('change', function() {
             const month = $(this).val();
@@ -322,14 +497,20 @@
         const netSalary = basic + allowances - deductions - pf - tds;
         $('#netSalary').val('₹' + netSalary.toLocaleString('en-IN', {minimumFractionDigits: 2}));
     }
-    
-    function editPayroll(id) {
-        alert('Edit functionality to be implemented for Payroll ID: ' + id);
-    }
-    
-    function viewPayslip(id) {
-        alert('View payslip functionality to be implemented for Payroll ID: ' + id);
-    }
+
+    $(document).on('input', '#editbasicSalary, #editallowances, #editdeductions, #editpfDeduction, #edittdsDeduction', function () {
+        const modal = $(this).closest('.modal');
+
+        const basic = parseFloat(modal.find('#editbasicSalary').val()) || 0;
+        const allowances = parseFloat(modal.find('#editallowances').val()) || 0;
+        const deductions = parseFloat(modal.find('#editdeductions').val()) || 0;
+        const pf = parseFloat(modal.find('#editpfDeduction').val()) || 0;
+        const tds = parseFloat(modal.find('#edittdsDeduction').val()) || 0;
+
+        const netSalary = basic + allowances - deductions - pf - tds;
+
+        modal.find('#editnetSalary').val('₹' + netSalary.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+    });
     
     function downloadPayslip(id) {
         alert('Download payslip functionality to be implemented for Payroll ID: ' + id);
@@ -356,11 +537,5 @@
         }
     });
 
-    // setTimeout(() => {
-    //     let history_payroll = document.getElementById("payrollTable_filter").getElementsByTagName("input")[0].value;
-    //     console.log(history_payroll);
-    //     document.getElementById("payrollTable_filter").getElementsByTagName("input")[0].value = "Hello"
-    //     console.log(document.getElementById("payrollTable_filter").getElementsByTagName("input")[0].value)
-    // }, 3000);
 </script>
 {% endblock %}

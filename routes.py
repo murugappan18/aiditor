@@ -396,10 +396,26 @@ def payroll():
     form = PayrollEntryForm()
     form.employee_id.choices = [(e.id, e.name) for e in Employee.query.filter_by(status='Active').all()]
     emp_id = request.args.get('emp_id')
-    search_emp_id = None
-    if(emp_id):
-        search_emp_id = emp_id
-    return render_template('admin/payroll.html', form=form, payroll=payroll_pagination, search_emp_id=search_emp_id)
+    search_emp_id = emp_id if emp_id else None
+
+    # 🔸 Calculating required metrics
+    total_payroll = db.session.query(db.func.sum(Employee.salary)).scalar() or 0
+    active_employees = Employee.query.filter_by(status='Active').count()
+    total_deductions = db.session.query(
+        db.func.sum(PayrollEntry.deductions + PayrollEntry.pf_deduction + PayrollEntry.tds_deduction)
+    ).scalar() or 0
+    net_payroll = db.session.query(db.func.sum(PayrollEntry.net_salary)).scalar() or 0
+
+    return render_template(
+        'admin/payroll.html', 
+        form=form, 
+        payroll=payroll_pagination, 
+        search_emp_id=search_emp_id,
+        total_payroll=total_payroll,
+        active_employees=active_employees,
+        total_deductions=total_deductions,
+        net_payroll=net_payroll
+    )
 
 @main_bp.route('/admin/payroll/new', methods=['GET', 'POST'])
 @login_required
@@ -434,6 +450,46 @@ def new_payroll_entry():
         return redirect(url_for('main.payroll'))
     
     return render_template('admin/payroll.html', form=form, payroll=None)
+
+@main_bp.route('/admin/payroll/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_payroll_entry(id):
+    entry = PayrollEntry.query.get_or_404(id)
+    form = PayrollEntryForm(obj=entry)
+    form.employee_id.choices = [(e.id, e.name) for e in Employee.query.filter_by(status='Active').all()]
+    form.employee_id.data = entry.employee_id
+
+    if form.validate_on_submit():
+        basic = form.basic_salary.data or 0
+        allowances = form.allowances.data or 0
+        deductions = form.deductions.data or 0
+        pf = form.pf_deduction.data or 0
+        tds = form.tds_deduction.data or 0
+        net_salary = basic + allowances - deductions - pf - tds
+
+        entry.employee_id = form.employee_id.data
+        entry.month_year = form.month_year.data
+        entry.basic_salary = basic
+        entry.allowances = allowances
+        entry.deductions = deductions
+        entry.pf_deduction = pf
+        entry.tds_deduction = tds
+        entry.net_salary = net_salary
+
+        db.session.commit()
+        flash('Payroll entry updated successfully!', 'success')
+        return redirect(url_for('main.payroll'))
+
+    return render_template('admin/payroll_form.html', form=form, payroll=None)
+
+@main_bp.route('/admin/payroll/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_payroll_entry(id):
+    entry = PayrollEntry.query.get_or_404(id)
+    db.session.delete(entry)
+    db.session.commit()
+    flash('Payroll entry deleted successfully!', 'success')
+    return redirect(url_for('main.payroll'))
 
 # Document Management Routes
 @main_bp.route('/admin/documents')
