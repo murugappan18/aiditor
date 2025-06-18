@@ -315,7 +315,25 @@ def employees():
         page=page, per_page=20, error_out=False
     )
     form = EmployeeForm()
-    return render_template('admin/employees.html', form=form, employees=employees_pagination)
+    # Total employee count
+    total_employees = Employee.query.count()
+    # Active employees count
+    active_employees = Employee.query.filter_by(status='Active').count()
+    # ✅ Distinct department count
+    departments_count = db.session.query(func.count(func.distinct(Employee.department))).scalar()
+    # ✅ Average salary
+    avg_salary = db.session.query(func.avg(Employee.salary)).scalar()
+    avg_salary = round(avg_salary or 0, 2)  # Handle None case if no employees yet
+
+    return render_template(
+        'admin/employees.html', 
+        form=form, 
+        employees=employees_pagination,
+        total_employees=total_employees,
+        active_employees=active_employees,
+        departments_count=departments_count,
+        avg_salary=avg_salary
+    )
 
 @main_bp.route('/admin/employees/new', methods=['GET', 'POST'])
 @login_required
@@ -368,7 +386,7 @@ def delete_employee(id):
     return redirect(url_for('main.employees'))
 
 # Payroll Management Routes
-@main_bp.route('/admin/payroll')
+@main_bp.route('/admin/payroll', methods=['GET'])
 @login_required
 def payroll():
     page = request.args.get('page', 1, type=int)
@@ -377,7 +395,11 @@ def payroll():
     )
     form = PayrollEntryForm()
     form.employee_id.choices = [(e.id, e.name) for e in Employee.query.filter_by(status='Active').all()]
-    return render_template('admin/payroll.html', form=form, payroll=payroll_pagination)
+    emp_id = request.args.get('emp_id')
+    search_emp_id = None
+    if(emp_id):
+        search_emp_id = emp_id
+    return render_template('admin/payroll.html', form=form, payroll=payroll_pagination, search_emp_id=search_emp_id)
 
 @main_bp.route('/admin/payroll/new', methods=['GET', 'POST'])
 @login_required

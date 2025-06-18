@@ -187,10 +187,13 @@
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
-                                            <button class="btn btn-outline-success" title="Payroll History" 
-                                                    onclick="viewPayrollHistory({{ employee.id }})">
-                                                <i class="fas fa-money-check-alt"></i>
-                                            </button>
+                                            <!-- View Payroll -->
+                                            <form method="GET" action="{{ url_for('main.payroll') }}">
+                                                <input type="hidden" name="emp_id" value="{{ employee.employee_id }}">
+                                                <button type="submit" class="btn btn-outline-success" title="Payroll History">
+                                                    <i class="fas fa-money-check-alt"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -513,10 +516,6 @@
             console.log('Filtering employees');
         });
     });
-    
-    function viewPayrollHistory(id) {
-        alert('Payroll history functionality to be implemented for Employee ID: ' + id);
-    }
     
     // Auto-format PAN input
     $(document).on('input', '#pan', function() {

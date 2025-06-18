@@ -305,6 +305,11 @@
             // Implement filtering logic
             console.log('Filtering by month:', month);
         });
+        const search_field = {{ search_emp_id | default('""') | tojson}};
+        if (search_field) {
+            let table = $('#payrollTable').DataTable(); // Get DataTable instance
+            table.search(search_field).draw();          // Perform search and redraw table
+        }
     });
     
     function calculateNetSalary() {
