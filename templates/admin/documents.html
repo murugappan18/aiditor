@@ -209,13 +209,13 @@
                                     <td>{{ document.uploader.username if document.uploader.username else '-' }}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewDocumentModal{{ document.id }}" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
                                             {% if document.file_path %}
-                                                <a href="{{ url_for('main.preview_document', id=document.id) }}" target="_blank" class="btn btn-outline-info" title="Preview">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
                                                 <a href="{{ url_for('main.download_document', id=document.id) }}" class="btn btn-outline-success" title="Download">
                                                     <i class="fas fa-download"></i>
-                                                 </a>
+                                                </a>
                                             {% endif %}
                                             <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editDocumentModal{{ document.id }}" title="Edit">
                                                 <i class="fas fa-edit"></i>
@@ -260,14 +260,14 @@
                                         </p>
                                         
                                         <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewDocumentModal{{ document.id }}" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
                                             {% if document.file_path %}                                            
                                             <a href="{{ url_for('main.download_document', id=document.id) }}" class="btn btn-outline-success" title="Download">
                                                 <i class="fas fa-download"></i>
                                             </a>
                                             {% endif %}
-                                            <a href="{{ url_for('main.preview_document', id=document.id) }}" target="_blank" class="btn btn-outline-info" title="Preview">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
                                             <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editDocumentModal{{ document.id }}" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
@@ -445,6 +445,102 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% if documents and documents.items %}
+    {% for document in documents.items %}
+        <div class="modal fade" id="viewDocumentModal{{ document.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Document Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Client Information</h6>
+                                <table class="table table-sm">
+                                    {% if document.client %}
+                                        <tr>
+                                            <td><strong>Client Name:</strong></td>
+                                            <td>{{ document.client.name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Client PAN:</strong></td>
+                                            <td>{{ document.client.pan }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Client Email:</strong></td>
+                                            <td>{{ document.client.email }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Client Phone:</strong></td>
+                                            <td>{{ document.client.phone }}</td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td><strong>Client Not Available:</strong></td>
+                                            <td>General Document</td>
+                                        </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <td><strong>Notes:</strong></td>
+                                        <td>{{ document.notes or '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Document Information</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Document Title:</strong></td>
+                                        <td>{{ document.title }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Document Type:</strong></td>
+                                        <td><span class="badge bg-info">{{ document.document_type }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>File Size</strong></td>
+                                        {% if document.file_size %}
+                                            {% if document.file_size < 1024 %}
+                                                <td>{{ document.file_size }} B</td>
+                                            {% elif document.file_size < 1024*1024 %}
+                                                <td>{{ "%.1f"|format(document.file_size/1024) }} KB</td>
+                                            {% else %}
+                                                <td>{{ "%.1f"|format(document.file_size/(1024*1024)) }} MB</td>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Uploaded Date:</strong></td>
+                                        <td>{{ document.upload_date.strftime('%d/%m/%Y') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Uploaded By:</strong></td>
+                                        <td>{{ document.uploader.username or '-' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        {% if document.file_path %}
+                            <a href="{{ url_for('main.preview_document', id=document.id) }}" target="_blank" class="btn btn-outline-info" title="Preview">
+                                <i class="fas fa-file"></i> Preview File
+                            </a>
+                        {% endif %}
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>                        
+                    </div>
                 </div>
             </div>
         </div>

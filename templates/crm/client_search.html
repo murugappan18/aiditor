@@ -85,7 +85,7 @@
                     <tr>
                         <td>
                             <strong>{{ client.name }}</strong><br>
-                            <small class="text-muted">{{ client.business_type or 'N/A' }}</small>
+                            <small class="text-muted">{{ client.client_type or 'N/A' }}</small>
                         </td>
                         <td>
                             <code>{{ client.pan or 'N/A' }}</code>
@@ -106,18 +106,14 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if client.email %}
-                            <div><i class="fas fa-envelope me-1"></i>{{ client.email }}</div>
-                            {% endif %}
-                            {% if client.phone %}
-                            <div><i class="fas fa-phone me-1"></i>{{ client.phone }}</div>
-                            {% endif %}
+                            <div><i class="fas fa-envelope me-1"></i>{{ client.email or 'Not Available'}}</div>
+                            <div><i class="fas fa-phone me-1"></i>{{ client.phone or 'Not Available' }}</div>
                         </td>
                         <td>
-                            {% if client.is_active %}
-                            <span class="badge bg-success">Active</span>
+                            {% if client.status == "Active" %}
+                                <span class="badge bg-success">Active</span>
                             {% else %}
-                            <span class="badge bg-secondary">Inactive</span>
+                                <span class="badge bg-secondary">Inactive</span>
                             {% endif %}
                         </td>
                         <td>
