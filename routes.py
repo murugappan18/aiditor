@@ -618,6 +618,78 @@ def new_outstanding_fee():
     
     return render_template('reports/outstanding.html', form=form, outstanding=None)
 
+@main_bp.route('/reports/outstanding/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_outstanding_fee(id):
+    fee = OutstandingFee.query.get_or_404(id)
+    form = OutstandingFeeForm(obj=fee)
+    form.client_id.choices = [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
+
+    if form.validate_on_submit():
+        form.populate_obj(fee)
+        db.session.commit()
+        flash('Outstanding fee updated successfully!', 'success')
+        return redirect(url_for('main.outstanding_reports'))
+
+    flash('Error updating outstanding fee!', 'danger')
+    return redirect(url_for('main.outstanding_reports'))
+
+@main_bp.route('/reports/outstanding/<int:id>/paid', methods=['POST'])
+@login_required
+def mark_as_paid(id):
+    fee = OutstandingFee.query.get_or_404(id)
+    fee.status = "Paid"
+    db.session.commit()
+    flash(f"{fee.invoice_number} is marked as Paid", 'success')
+    return redirect(url_for('main.outstanding_reports'))
+
+@main_bp.route('/reports/outstanding/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_outstanding_fee(id):
+    fee = OutstandingFee.query.get_or_404(id)
+    db.session.delete(fee)
+    db.session.commit()
+    flash('Outstanding fee deleted successfully!', 'success')
+    return redirect(url_for('main.outstanding_reports'))
+
+@main_bp.route('/api/outstanding/<int:id>/send-reminder', methods=['POST'])
+@login_required
+def send_payment_reminder(id):
+    fee = OutstandingFee.query.get_or_404(id)
+    client = Client.query.get(fee.client_id)
+    
+    if not client:
+        flash('Client Not Found.', 'danger')
+        return redirect(url_for('main.outstanding_reports'))
+
+    # Check if a similar reminder already exists for today (optional)
+    today = datetime.now().date()
+    existing = Reminder.query.filter(
+        Reminder.client_id == client.id,
+        Reminder.fee_id == fee.id,
+        func.date(Reminder.reminder_date) == today
+    ).first()
+    if existing:
+        flash(f"Reminder already sent today for {client.name}!", 'warning')
+        return redirect(url_for('main.outstanding_reports'))
+
+    # Create reminder
+    reminder = Reminder(
+        client_id=client.id,
+        fee_id=fee.id,
+        title='Payment Due',
+        description=f'Payment of ₹{fee.amount} is due for Invoice {fee.invoice_number}.',
+        reminder_date=today,
+        reminder_type='Due Date',
+        auto_created=True,
+        created_by=current_user.id
+    )
+    db.session.add(reminder)
+    db.session.commit()
+
+    flash(f"Payment Reminder Created successfully for {client.name}!", 'success')
+    return redirect(url_for('main.outstanding_reports'))
+
 # User Management Routes
 @main_bp.route('/settings/users')
 @login_required
@@ -759,6 +831,15 @@ def edit_reminder(id):
         return redirect(url_for('main.reminders'))
     
     return render_template('crm/reminder_form.html', form=form, reminder=reminder, title='Edit Reminder')
+
+@main_bp.route('/reminders/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_reminder(id):
+    reminder = Reminder.query.get_or_404(id)
+    db.session.delete(reminder)
+    db.session.commit()
+    flash('Reminder deleted successfully.', 'success')
+    return redirect(url_for('main.reminders'))
 
 @main_bp.route('/reminders/<int:id>/complete')
 @login_required

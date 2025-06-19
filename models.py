@@ -427,8 +427,8 @@ class Reminder(db.Model):
     __tablename__ = 'reminders'
     
     id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, ForeignKey('clients.id'))
-    client = relationship("Client", backref="reminders")
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=True)
+    fee_id = Column(Integer, ForeignKey('outstanding_fees.id'), nullable=True)
     title = Column(String(200), nullable=False)
     description = Column(Text)
     reminder_date = Column(DateTime, nullable=False)
@@ -438,6 +438,9 @@ class Reminder(db.Model):
     notification_sent = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(Integer, ForeignKey('users.id'))
+
+    client = relationship("Client", backref="reminders")
+    fee = relationship("OutstandingFee", backref="reminders")
 
 class AutoReminderSetting(db.Model):
     __tablename__ = 'auto_reminder_settings'
