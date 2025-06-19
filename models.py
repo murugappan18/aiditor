@@ -149,6 +149,8 @@ class Document(db.Model):
     uploaded_by = Column(Integer, ForeignKey('users.id'))
     notes = Column(Text)
 
+    uploader = relationship("User", backref="uploaded_documents")
+
 class OutstandingFee(db.Model):
     __tablename__ = 'outstanding_fees'
     

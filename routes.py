@@ -6,7 +6,7 @@ from models import *
 from forms import *
 from utils import allowed_file, save_uploaded_file
 from datetime import datetime, date, timedelta
-from sqlalchemy import func, extract, or_
+from sqlalchemy import func, extract, distinct, or_
 from collections import OrderedDict
 from calendar import month_abbr
 
@@ -499,9 +499,32 @@ def documents():
     documents_pagination = Document.query.join(Client, isouter=True).order_by(Document.upload_date.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
+    
+    # Stats
+    total_documents = db.session.query(func.count(Document.id)).scalar()
+    total_file_size = db.session.query(func.sum(Document.file_size)).scalar() or 0
+
+    now = datetime.utcnow()
+    documents_this_month = db.session.query(func.count(Document.id)).filter(
+        extract('month', Document.upload_date) == now.month,
+        extract('year', Document.upload_date) == now.year
+    ).scalar()
+
+    # Form
     form = DocumentForm()
     form.client_id.choices = [(0, 'Select Client')] + [(c.id, c.name) for c in Client.query.filter_by(status='Active').all()]
-    return render_template('admin/documents.html', form=form, documents=documents_pagination)
+
+    document_types_count = len(form.document_type.choices) or 0
+    
+    return render_template(
+        'admin/documents.html',
+        form=form,
+        documents=documents_pagination,
+        total_documents=total_documents,
+        total_file_size=total_file_size,
+        documents_this_month=documents_this_month,
+        document_types_count=document_types_count
+    )
 
 @main_bp.route('/admin/documents/new', methods=['GET', 'POST'])
 @login_required
@@ -532,6 +555,76 @@ def new_document():
         return redirect(url_for('main.documents'))
     
     return render_template('admin/documents.html', form=form, documents=None)
+
+# Edit Document
+@main_bp.route('/admin/documents/<int:id>/edit', methods=['POST'])
+@login_required
+def edit_document(id):
+    document = Document.query.get_or_404(id)
+    title = request.form.get('title')
+    document_type = request.form.get('document_type')
+    client_id = int(request.form.get('client_id')) or None
+    notes = request.form.get('notes')
+    file = request.files.get('file')
+
+    if title:
+        document.title = title
+    if document_type:
+        document.document_type = document_type
+    document.client_id = client_id
+    document.notes = notes
+
+    if file:
+        file_path, file_size = save_uploaded_file(file)
+        document.file_path = file_path
+        document.file_size = file_size
+
+    db.session.commit()
+    flash('Document updated successfully!', 'success')
+    return redirect(url_for('main.documents'))
+
+# Delete Document
+@main_bp.route('/admin/documents/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_document(id):
+    document = Document.query.get_or_404(id)
+    db.session.delete(document)
+    db.session.commit()
+    flash('Document deleted successfully!', 'success')
+    return redirect(url_for('main.documents'))
+
+# Preview Document
+@main_bp.route('/admin/documents/<int:id>/preview')
+@login_required
+def preview_document(id):
+    document = Document.query.get_or_404(id)
+    if document.file_path:
+        from flask import send_file
+
+        return send_file(document.file_path)
+    flash('File not found.', 'warning')
+    return redirect(url_for('main.documents'))
+
+# Download Document
+@main_bp.route('/admin/documents/<int:id>/download')
+@login_required
+def download_document(id):
+    document = Document.query.get_or_404(id)
+    
+    if document.file_path and os.path.exists(document.file_path):
+        from flask import send_file
+        from werkzeug.utils import secure_filename
+
+        # Get the file extension from the file path
+        file_ext = os.path.splitext(document.file_path)[1]  # Example: '.pdf'
+
+        # Sanitize and construct the full filename with extension
+        filename = secure_filename(document.title or 'document') + file_ext
+
+        return send_file(document.file_path, as_attachment=True, download_name=filename)
+
+    flash('File not found.', 'warning')
+    return redirect(url_for('main.documents'))
 
 # Reports Routes
 @main_bp.route('/reports/outstanding')
