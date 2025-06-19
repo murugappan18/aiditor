@@ -383,6 +383,14 @@ class EmailTemplateForm(FlaskForm):
     is_active = BooleanField('Active', default=True)
 
 
+class EmailSetupForm(FlaskForm):
+    email_service = SelectField('Email Service', choices=[('gmail', 'Gmail'), ('outlook', 'Outlook')], validators=[DataRequired()])
+    email_address = StringField('Email Address', validators=[DataRequired(), Email()])
+    email_password = PasswordField('Password', validators=[DataRequired()])
+    smtp_server = StringField('SMTP Server', render_kw={"readonly": True})
+    smtp_port = IntegerField('Port', render_kw={"readonly": True})
+
+
 class InventoryForm(FlaskForm):
     item_id = HiddenField()  # Used for editing
     item_name = StringField('Item Name', validators=[DataRequired(), Length(max=200)])

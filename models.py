@@ -420,10 +420,23 @@ class CommunicationLog(db.Model):
     subject = Column(String(200))
     message = Column(Text)
     recipient = Column(String(200))  # Phone number or email
-    status = Column(String(20), default='Sent')  # Sent, Failed, Delivered, Read
+    status = Column(String(20), default='Failed')  # Sent, Failed, Delivered, Read
     sent_at = Column(DateTime, default=datetime.utcnow)
     template_used = Column(String(100))
     created_by = Column(Integer, ForeignKey('users.id'))
+
+class Configuration(db.Model):
+    __tablename__ = 'configurations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # each user can have config
+    type = db.Column(db.String(20))  # 'email' or 'sms'
+    email_service = db.Column(db.String(50))  # 'gmail' or 'outlook' (only for email)
+    email_address = db.Column(db.String(120))
+    email_password = db.Column(db.String(120))  # consider encrypting in production
+    smtp_server = db.Column(db.String(120))
+    smtp_port = db.Column(db.Integer)
+    status = db.Column(db.String(20), default='NotConfigured')  # 'Configured' or 'NotConfigured'
 
 class Reminder(db.Model):
     __tablename__ = 'reminders'

@@ -107,7 +107,7 @@ def delete_client(id):
     client = Client.query.get_or_404(id)
     db.session.delete(client)
     db.session.commit()
-    flash('Income Tax Return deleted successfully.', 'success')
+    flash('Client deleted successfully.', 'success')
     return redirect(url_for('main.clients'))
 
 # Tax Returns Routes
@@ -872,6 +872,15 @@ def edit_user(id):
         flash('User updated successfully!', 'success')
         return redirect(url_for('main.users'))
 
+    return redirect(url_for('main.users'))
+
+@main_bp.route('/settings/users/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully!', 'success')
     return redirect(url_for('main.users'))
 
 # Toggle Active/Inactive User
@@ -2217,7 +2226,6 @@ def delete_checklist(checklist_id):
     return redirect(url_for("main.document_checklists"))
 
 
-
 @main_bp.route('/crm/communications')
 @login_required
 def communications():
@@ -2235,7 +2243,7 @@ def communications():
     ).count()
 
     email_count = CommunicationLog.query.filter(
-        CommunicationLog.communication_type == 'Email',
+        CommunicationLog.communication_type == 'email',
         func.extract('month', CommunicationLog.sent_at) == current_month,
         func.extract('year', CommunicationLog.sent_at) == current_year
     ).count()
@@ -2249,16 +2257,19 @@ def communications():
     sms_templates = SMSTemplate.query.all()
     email_templates = EmailTemplate.query.all()
 
+    email_config = Configuration.query.filter_by(user_id=current_user.id, type='email').first()
+
     # Simulated configuration statuses (you would fetch these from settings/config DB table)
     config = {
-        "twilio_status": "NotConfigured",  # or "Configured"
-        "smtp_status": "NotConfigured"
+        "twilio_status": "NotConfigured",  # handle this later
+        "smtp_status": email_config.status if email_config else "NotConfigured"
     }
 
     smsForm = SMSTemplateForm()
 
     return render_template('crm/communications.html',
                            smsForm=smsForm,
+                           email_form = EmailSetupForm(),
                            logs=logs,
                            clients=clients,
                            sms_templates=sms_templates,
@@ -2267,7 +2278,138 @@ def communications():
                            email_count=email_count,
                            auto_reminders=auto_reminders,
                            templates_count=templates_count,
-                           config=config)
+                           config=config,
+                           timedelta=timedelta)
+
+@main_bp.route('/crm/setup-email', methods=['POST'])
+@login_required
+def setup_email():
+    form = EmailSetupForm()
+    if form.validate_on_submit():
+        existing = Configuration.query.filter_by(user_id=current_user.id, type='email').first()
+        if not existing:
+            existing = Configuration(user_id=current_user.id, type='email')
+        
+        existing.email_service = form.email_service.data
+        existing.email_address = form.email_address.data
+        existing.email_password = form.email_password.data  # encrypt this if storing
+        existing.smtp_server = form.smtp_server.data
+        existing.smtp_port = form.smtp_port.data
+        existing.status = 'Configured'
+
+        db.session.add(existing)
+        db.session.commit()
+        flash('Email configuration saved.', 'success')
+    else:
+        flash('Error in configuration form.', 'danger')
+
+    return redirect(url_for('main.communications'))
+
+@main_bp.route('/crm/reset-email-config', methods=['POST'])
+@login_required
+def reset_email_config():
+    config = Configuration.query.filter_by(user_id=current_user.id, type='email').first()
+    if config:
+        config.status = 'NotConfigured'
+        db.session.commit()
+        flash('Email configuration has been reset.', 'info')
+    else:
+        flash('No configuration found to reset.', 'warning')
+    return redirect(url_for('main.communications'))
+
+@main_bp.route('/crm/send-email', methods=['POST'])
+@login_required
+def send_email():
+    import smtplib
+    from email.message import EmailMessage
+    # Check SMTP config for current user
+    smtp_config = Configuration.query.filter_by(user_id=current_user.id, type='email', status='Configured').first()
+    if not smtp_config:
+        flash('Email configuration not found. Please configure SMTP settings before sending emails.', 'warning')
+        return redirect(url_for('main.communications'))
+
+    # Extract form data
+    message_type = request.form.get('message_type')  # should be 'email'
+    subject = request.form.get('subject')
+    body = request.form.get('message')
+    template_id = request.form.get('template_id')
+    recipient_ids = request.form.getlist('recipients')
+
+    # Prepare recipients
+    if 'all' in recipient_ids:
+        clients = Client.query.filter_by(status='Active').all()
+    else:
+        clients = Client.query.filter(Client.id.in_(recipient_ids)).all()
+
+    # Send emails
+    try:
+        with smtplib.SMTP(smtp_config.smtp_server, smtp_config.smtp_port) as server:
+            server.starttls()
+            server.login(smtp_config.email_address, smtp_config.email_password)
+
+            for client in clients:
+                # Replace placeholders in subject and body
+                personalized_subject = substitute_vars(subject, client)
+                personalized_body = substitute_vars(body, client)
+
+                msg = EmailMessage()
+                msg['From'] = smtp_config.email_address
+                msg['To'] = client.email  # assumes Client model has .email
+                msg['Subject'] = personalized_subject
+                msg.set_content(personalized_body)
+
+                server.send_message(msg)
+
+                # Log communication
+                log = CommunicationLog(
+                    client_id=client.id,
+                    communication_type=message_type,
+                    subject=personalized_subject,
+                    message=personalized_body,
+                    recipient=client.name,
+                    status='Sent',
+                    template_used=template_id or 'Custom',
+                    created_by=current_user.id
+                )
+                db.session.add(log)
+
+            db.session.commit()
+        flash(f"Email sent to {len(clients)} client(s) successfully!", 'success')
+    
+    except smtplib.SMTPAuthenticationError:
+        flash('Authentication failed. Please check your email address and password.', 'danger')
+    except smtplib.SMTPException as e:
+        flash(f"SMTP error occurred: {str(e)}", 'danger')
+    except Exception as e:
+        flash(f"Unexpected error occurred: {str(e)}", 'danger')
+
+    return redirect(url_for('main.communications'))
+
+def substitute_vars(template, client):
+    # Replace variables with client-specific values
+    vars = {
+        '{client_name}': client.name,
+        '{due_date}': client.due_date.strftime('%d-%m-%Y') if hasattr(client, 'due_date') and client.due_date else '',
+        '{amount}': str(client.amount) if hasattr(client, 'amount') else ''
+    }
+    for var, value in vars.items():
+        template = template.replace(var, value)
+    return template
+
+@main_bp.route('/crm/delete_log/<int:id>', methods=['POST'])
+@login_required
+def delete_log(id):
+    log = CommunicationLog.query.get_or_404(id)
+
+    try:
+        db.session.delete(log)
+        db.session.commit()
+        flash('Log deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting log: {str(e)}', 'danger')
+
+    return redirect(url_for('main.communications'))
 
 @main_bp.route('/crm/auto-reminders/update', methods=['POST'])
 @login_required
