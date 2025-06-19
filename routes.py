@@ -842,6 +842,87 @@ def new_inventory_item():
     flash('Error when Creating New Inventory Item!', 'danger')
     return render_template('erp/inventory.html', form=form, title='New Inventory Item')
 
+@main_bp.route('/inventory/<int:id>/edit', methods=['POST'])
+@login_required
+def edit_inventory_item(id):
+    item = InventoryItems.query.get_or_404(id)
+
+    # Get raw POST data
+    item.item_name = request.form.get('item_name')
+    item.item_code = request.form.get('item_code')
+    item.description = request.form.get('description')
+    item.unit = request.form.get('unit')
+    item.unit_price = float(request.form.get('unit_price') or 0.0)
+    item.current_stock = int(request.form.get('current_stock') or 0)
+    item.minimum_stock = int(request.form.get('minimum_stock') or 0)
+    item.location = request.form.get('location')
+    item.category = request.form.get('category')
+
+    # Recalculate status and total value
+    if item.current_stock <= 0:
+        item.status = 'Out of Stock'
+    elif item.current_stock < item.minimum_stock:
+        item.status = 'Low Stock'
+    else:
+        item.status = 'In Stock'
+
+    item.total_value = round(item.unit_price * item.current_stock, 2)
+
+    db.session.commit()
+    flash('Inventory item updated successfully!', 'success')
+    return redirect(url_for('main.inventory'))
+
+@main_bp.route('/inventory/<int:id>/increment', methods=['POST'])
+@login_required
+def increment_inventory_item(id):
+    item = InventoryItems.query.get_or_404(id)
+    item.current_stock += 1
+    item.total_value = round(item.unit_price * item.current_stock, 2)
+
+    # Update status
+    if item.current_stock <= 0:
+        item.status = 'Out of Stock'
+    elif item.current_stock < item.minimum_stock:
+        item.status = 'Low Stock'
+    else:
+        item.status = 'In Stock'
+
+    db.session.commit()
+    flash(f'Stock incremented for "{item.item_name}".', 'success')
+    return redirect(url_for('main.inventory'))
+
+@main_bp.route('/inventory/<int:id>/decrement', methods=['POST'])
+@login_required
+def decrement_inventory_item(id):
+    item = InventoryItems.query.get_or_404(id)
+    if item.current_stock > 0:
+        item.current_stock -= 1
+        item.total_value = round(item.unit_price * item.current_stock, 2)
+
+        # Update status
+        if item.current_stock <= 0:
+            item.status = 'Out of Stock'
+        elif item.current_stock < item.minimum_stock:
+            item.status = 'Low Stock'
+        else:
+            item.status = 'In Stock'
+
+        db.session.commit()
+        flash(f'Stock decremented for "{item.item_name}".', 'warning')
+    else:
+        flash(f'Cannot decrement. "{item.item_name}" stock is already zero.', 'danger')
+
+    return redirect(url_for('main.inventory'))
+
+@main_bp.route('/inventory/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_inventory_item(id):
+    item = InventoryItems.query.get_or_404(id)
+    db.session.delete(item)
+    db.session.commit()
+    flash('Inventory item deleted successfully.', 'success')
+    return redirect(url_for('main.inventory'))
+
 @main_bp.route('/analytics')
 @login_required
 def analytics():
