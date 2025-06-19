@@ -168,7 +168,7 @@
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <button class="btn btn-outline-primary" title="Edit" 
-                                                    onclick="editUser({{ user.id }})"
+                                                    data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}"
                                                     {% if user.id == current_user.id %}disabled{% endif %}>
                                                 <i class="fas fa-edit"></i>
                                             </button>
@@ -337,6 +337,76 @@
     </div>
 </div>
 
+<!-- Edit User Modal -->
+{% if users and users.items %}
+    {% for user in users.items %}
+    <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('main.edit_user', id=user.id) }}">
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="id" value="{{ user.id }}">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit User - {{ user.username}}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.username.label(class="form-label") }}
+                                <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+                                <div class="form-text">Username must be unique</div>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.email.label(class="form-label") }}
+                                <input type="text" name="email" class="form-control" value="{{ user.email }}" required>
+                                <div class="form-text">Email must be unique</div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.role_id.label(class="form-label") }}
+                                <select class="form-select" name="role_id">
+                                    {% for val, label in form.role_id.choices %}
+                                        <option value="{{ val }}" {% if val == user.role_id %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Select user role and permissions</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="new_password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" name="password" placeholder="Leave blank to keep current password">
+                                <div class="form-text">Minimum 6 characters</div>
+                            </div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_active" {% if user.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="editIsActive">
+                                Active user
+                            </label>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Role Permissions:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Admin:</strong> Full system access including user management</li>
+                                <li><strong>User:</strong> Standard access to clients, taxes, and reports</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
 <!-- User Detail Modals -->
 {% if users and users.items %}
     {% for user in users.items %}
@@ -448,7 +518,7 @@
                     </div>
                     <div class="modal-footer">
                         {% if user.id != current_user.id %}
-                            <button type="button" class="btn btn-outline-primary" onclick="editUser({{ user.id }})">Edit User</button>
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">Edit User</button>
                         {% endif %}
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
@@ -457,6 +527,7 @@
         </div>
     {% endfor %}
 {% endif %}
+  
 {% endblock %}
 
 {% block scripts %}
@@ -478,10 +549,6 @@
             console.log('Filtering users');
         });
     });
-    
-    function editUser(id) {
-        alert('Edit functionality to be implemented for User ID: ' + id);
-    }
     
     function resetPassword(id) {
         if (confirm('Reset password for this user? A new temporary password will be generated.')) {

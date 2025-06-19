@@ -702,15 +702,28 @@ def users():
     users_pagination = User.query.join(Role).order_by(User.created_at.desc()).paginate(
         page=page, per_page=20, error_out=False
     )
-
-    if current_user.role.name != 'admin':
-        flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('main.dashboard'))
     
     form = UserForm()
     form.role_id.choices = [(r.id, r.name) for r in Role.query.all()]
+
+    # 🟢 Stats computation
+    total_users = User.query.count()
+    active_users = User.query.filter_by(is_active=True).count()
+    admin_role = Role.query.filter_by(name='admin').first()
+    admin_users = User.query.filter_by(role_id=admin_role.id).count() if admin_role else 0
+    twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+    recent_logins = User.query.filter(User.last_login != None, User.last_login >= twenty_four_hours_ago).count()
     
-    return render_template('settings/users.html', form=form, users=users_pagination, datetime=datetime)
+    return render_template(
+        'settings/users.html',
+        form=form,
+        users=users_pagination,
+        datetime=datetime,
+        total_users=total_users,
+        active_users=active_users,
+        admin_users=admin_users,
+        recent_logins=recent_logins
+    )
 
 @main_bp.route('/settings/users/new', methods=['GET', 'POST'])
 @login_required
@@ -739,6 +752,73 @@ def new_user():
         return redirect(url_for('main.users'))
     
     return render_template('settings/users.html', form=form, users=None)
+
+# Edit User (Form Update via Modal or Page)
+@main_bp.route('/settings/users/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(id):
+    if current_user.role.name != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    user = User.query.get_or_404(id)
+    form = UserForm(obj=user)
+    form.role_id.choices = [(r.id, r.name) for r in Role.query.all()]
+
+    if form.validate_on_submit():
+        from werkzeug.security import generate_password_hash
+
+        user.username = form.username.data
+        user.email = form.email.data
+        user.role_id = form.role_id.data
+        user.is_active = form.is_active.data
+        if form.password.data:
+            user.password_hash = generate_password_hash(form.password.data)
+
+        db.session.commit()
+        flash('User updated successfully!', 'success')
+        return redirect(url_for('main.users'))
+
+    return redirect(url_for('main.users'))
+
+# Toggle Active/Inactive User
+@main_bp.route('/api/users/<int:id>/toggle-status', methods=['POST'])
+@login_required
+def toggle_user_status(id):
+    if current_user.role.name != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    user = User.query.get_or_404(id)
+
+    if user.id == current_user.id:
+        return jsonify({'error': 'You cannot change your own status.'}), 400
+
+    user.is_active = data.get('is_active', user.is_active)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+# Reset User Password
+@main_bp.route('/api/users/<int:id>/reset-password', methods=['POST'])
+@login_required
+def reset_password(id):
+    if current_user.role.name != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    user = User.query.get_or_404(id)
+
+    if user.id == current_user.id:
+        return jsonify({'error': 'You cannot reset your own password.'}), 400
+    
+    from werkzeug.security import generate_password_hash
+    import secrets
+
+    new_password = secrets.token_urlsafe(8)
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+
+    return jsonify({'success': True, 'new_password': new_password})
 
 # API Routes for AJAX
 @main_bp.route('/api/clients/search')
