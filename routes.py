@@ -2026,6 +2026,7 @@ def get_actions(status):
         ]
     return []
 
+
 # View Route
 @main_bp.route('/crm/document-checklists')
 @login_required
@@ -2043,6 +2044,7 @@ def document_checklists():
         progress = int((received / total) * 100) if total else 0
 
         checklist = {
+            'id': c.id,
             'client': c.client.name if c.client else 'N/A',
             'description': c.checklist_name,
             'service': c.service_type,
@@ -2062,6 +2064,7 @@ def document_checklists():
 
     return render_template('crm/document_checklists.html', checklists=checklists, clients=clients)
 
+
 # Form Submission Route
 @main_bp.route('/create_checklist', methods=['POST'])
 @login_required
@@ -2073,20 +2076,23 @@ def create_checklist():
         checklist_name = form.get("description")
         service_type = form.get("service")
         due_date = datetime.strptime(form.get("due_date"), "%Y-%m-%d").date()
-        documents = request.form.getlist("documents")
-        custom_docs = request.form.getlist("custom_docs")
 
-        # Combine and store required documents
-        document_list = documents + custom_docs
-        received_docs = []  # Empty initially
+        # Get documents
+        documents = request.form.getlist("documents")         # Checked default documents
+        custom_docs = request.form.getlist("custom_docs")     # All custom added documents
+
+        all_documents = documents + custom_docs
+        total_docs = len(all_documents)
+        checked_docs = len(documents)  # Assume only default docs are initially checked
+        percentage = int((checked_docs / total_docs) * 100) if total_docs else 0
 
         new_checklist = DocumentChecklist(
             client_id=client_id,
             checklist_name=checklist_name,
             service_type=service_type,
-            documents_required=json.dumps(document_list),
-            documents_received=json.dumps(received_docs),
-            completion_percentage=0,
+            documents_required=json.dumps(all_documents),
+            documents_received=json.dumps(documents),
+            completion_percentage=percentage,
             due_date=due_date,
             status="Pending",
             created_by=current_user.id
@@ -2102,6 +2108,21 @@ def create_checklist():
         db.session.rollback()
         flash(f"Error creating checklist: {e}", "danger")
         return redirect(url_for("main.document_checklists"))
+
+
+@main_bp.route('/delete_checklist/<int:checklist_id>', methods=['POST'])
+@login_required
+def delete_checklist(checklist_id):
+    try:
+        checklist = DocumentChecklist.query.get_or_404(checklist_id)
+        db.session.delete(checklist)
+        db.session.commit()
+        flash("Checklist deleted successfully!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting checklist: {e}", "danger")
+    return redirect(url_for("main.document_checklists"))
+
 
 
 @main_bp.route('/crm/communications')

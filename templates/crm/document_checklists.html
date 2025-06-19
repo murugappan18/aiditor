@@ -94,17 +94,27 @@
                             <div class="progress" style="height: 20px;">
                                 <div class="progress-bar bg-{{ checklist.progress_color }}" style="width: {{ checklist.progress }}%">{{ checklist.progress }}%</div>
                             </div>
-                            <small class="text-muted">{{ checklist.received }}/{{ checklist.total }} documents received</small>
+                            <small class="text-muted">{{ checklist.received }} checked / {{ checklist.total }} total documents</small>
+
                         </td>
                         <td><span class="badge bg-{{ checklist.status_color }}">{{ checklist.status }}</span></td>
                         <td>
-                            <div class="btn-group btn-group-sm">
-                                {% for action in checklist.actions %}
-                                <button class="btn btn-outline-{{ action.color }} btn-sm" title="{{ action.tooltip }}">
-                                    <i class="fas fa-{{ action.icon }}"></i>
-                                </button>
-                                {% endfor %}
-                            </div>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-info btn-sm" title="View"
+                                        onclick='showChecklistDetails({{ checklist | tojson | safe }})'>
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" title="Download"
+                                        onclick='downloadChecklist({{ checklist | tojson | safe }})'>
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <form method="POST" action="{{ url_for('main.delete_checklist', checklist_id=checklist.id) }}"
+                                          onsubmit="return confirm('Are you sure you want to delete this checklist?');" style="display:inline;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>                        
                         </td>
                     </tr>
                     {% endfor %}
@@ -136,11 +146,10 @@
                                 <label class="form-label">Client</label>
                                 <select class="form-select" name="client" required>
                                     <option value="">Select Client</option>
-                                    <option value="1">DAC</option>
-                                    <option value="2">ABC</option>
-                                    <!-- {% for client in clients %}
+                                    
+                                    {% for client in clients %}
                                     <option value="{{ client.id }}">{{ client.name }}</option>
-                                    {% endfor %} -->
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>
@@ -177,6 +186,13 @@
                     <div class="mb-3">
                         <label class="form-label">Documents</label>
                         <div id="documentList" class="ps-2"></div>
+                        <div class="mt-3">
+                            <div class="progress" style="height: 20px;">
+                                <div id="checklistProgressBar" class="progress-bar bg-success" style="width: 0%">0%</div>
+                            </div>
+                            <small id="progressCount" class="text-muted">0/0 documents selected</small>
+                        </div>
+                        
                     </div>
 
                     <div id="customDocBtn" class="text-start mb-3" style="display: none;">
@@ -233,73 +249,145 @@
         {% endfor %}
     </div>
 </div>
-
-<!-- JS -->
-<script>
-
-document.addEventListener("DOMContentLoaded", function () {
-    const filterSelect = document.getElementById("serviceFilter");
-    const rows = document.querySelectorAll("#checklistTable tbody tr");
-    const noMessage = document.getElementById("noChecklistMessage");
-
-    filterSelect.addEventListener("change", function () {
-        const selected = this.value;
-        let anyVisible = false;
-
-        rows.forEach(row => {
-            const service = row.getAttribute("data-service");
-            const match = (selected === "All Services" || service === selected);
-            row.style.display = match ? "" : "none";
-            if (match) anyVisible = true;
-        });
-
-        noMessage.style.display = anyVisible ? "none" : "block";
-    });
-});
-
-
-document.addEventListener('DOMContentLoaded', function () {
-    const serviceType = document.getElementById('serviceType');
-    const documentList = document.getElementById('documentList');
-    const templates = document.getElementById('documentTemplates');
-    const customDocBtn = document.getElementById('customDocBtn');
-
-    serviceType.addEventListener('change', function () {
-        const selectedService = this.value;
-        documentList.innerHTML = '';
-        customDocBtn.style.display = selectedService ? 'block' : 'none';
-
-        let templateClass = '';
-        switch (selectedService) {
-            case 'ITR Filing': templateClass = 'itr-documents'; break;
-            case 'GST Returns': templateClass = 'gst-documents'; break;
-            case 'Statutory Audit': templateClass = 'audit-documents'; break;
-            case 'ROC Compliance': templateClass = 'roc-documents'; break;
+<!-- View Modal -->
+<div class="modal fade" id="checklistModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Checklist Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="checklistDetails">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function showChecklistDetails(data) {
+        const html = `
+          <p><strong>Client:</strong> ${data.client}</p>
+          <p><strong>Service Type:</strong> ${data.service}</p>
+          <p><strong>Checklist Name:</strong> ${data.description}</p>
+          <p><strong>Due Date:</strong> ${data.due_date}</p>
+          <p><strong>Status:</strong> ${data.status}</p>
+          <p><strong>Progress:</strong> ${data.progress}% (${data.received}/${data.total} documents received)</p>
+        `;
+        document.getElementById('checklistDetails').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('checklistModal')).show();
+    }
+    
+    function downloadChecklist(data) {
+        const content = `
+    Client: ${data.client}
+    Service Type: ${data.service}
+    Checklist Name: ${data.description}
+    Due Date: ${data.due_date}
+    Status: ${data.status}
+    Progress: ${data.progress}% (${data.received}/${data.total} documents)
+        `.trim();
+    
+        const blob = new Blob([content], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${data.client.replace(/\s+/g, '_')}_Checklist.txt`;
+        link.click();
+    }
+    
+    // ✅ Live Progress Update
+    function updateChecklistProgressBar() {
+        const checkboxes = document.querySelectorAll('#documentList input[type="checkbox"]');
+        const total = checkboxes.length;
+        const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const percent = total ? Math.round((checked / total) * 100) : 0;
+    
+        const bar = document.getElementById('checklistProgressBar');
+        const count = document.getElementById('progressCount');
+    
+        if (bar && count) {
+            bar.style.width = percent + '%';
+            bar.innerText = percent + '%';
+            count.innerText = `${checked}/${total} documents selected`;
         }
-
-        const template = templates.querySelector('.' + templateClass);
-        if (template) {
-            const checkboxes = template.querySelectorAll('.form-check');
-            checkboxes.forEach((check) => {
-                const clone = check.cloneNode(true);
-                documentList.appendChild(clone);
+    }
+    
+    // ✅ Filter by Service Dropdown
+    document.addEventListener("DOMContentLoaded", function () {
+        const filterSelect = document.getElementById("serviceFilter");
+        const rows = document.querySelectorAll("#checklistTable tbody tr");
+        const noMessage = document.getElementById("noChecklistMessage");
+    
+        filterSelect.addEventListener("change", function () {
+            const selected = this.value;
+            let anyVisible = false;
+    
+            rows.forEach(row => {
+                const service = row.getAttribute("data-service");
+                const match = (selected === "All Services" || service === selected);
+                row.style.display = match ? "" : "none";
+                if (match) anyVisible = true;
             });
-        }
+    
+            noMessage.style.display = anyVisible ? "none" : "block";
+        });
     });
-});
-
-function addCustomDocument() {
-    const documentList = document.getElementById('documentList');
-    const newDoc = document.createElement('div');
-    newDoc.className = 'form-check d-flex align-items-center gap-2 mt-2';
-    newDoc.innerHTML = `
-        <input class="form-check-input mt-0" type="checkbox" checked name="documents">
-        <input type="text" class="form-control form-control-sm" name="custom_docs" placeholder="Enter document name" required>
-        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">
-            <i class="fas fa-trash"></i>
-        </button>
-    `;
-    documentList.appendChild(newDoc);
-}
-</script>
+    
+    // ✅ Load Documents on Service Change
+    document.addEventListener('DOMContentLoaded', function () {
+        const serviceType = document.getElementById('serviceType');
+        const documentList = document.getElementById('documentList');
+        const templates = document.getElementById('documentTemplates');
+        const customDocBtn = document.getElementById('customDocBtn');
+    
+        serviceType.addEventListener('change', function () {
+            const selectedService = this.value;
+            documentList.innerHTML = '';
+            customDocBtn.style.display = selectedService ? 'block' : 'none';
+    
+            let templateClass = '';
+            switch (selectedService) {
+                case 'ITR Filing': templateClass = 'itr-documents'; break;
+                case 'GST Returns': templateClass = 'gst-documents'; break;
+                case 'Statutory Audit': templateClass = 'audit-documents'; break;
+                case 'ROC Compliance': templateClass = 'roc-documents'; break;
+            }
+    
+            const template = templates.querySelector('.' + templateClass);
+            if (template) {
+                const checkboxes = template.querySelectorAll('.form-check');
+                checkboxes.forEach((check) => {
+                    const clone = check.cloneNode(true);
+                    const checkbox = clone.querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        checkbox.addEventListener('change', updateChecklistProgressBar);
+                    }
+                    documentList.appendChild(clone);
+                });
+                updateChecklistProgressBar();
+            }
+        });
+    });
+    
+    // ✅ Add Custom Document Row
+    function addCustomDocument() {
+        const documentList = document.getElementById('documentList');
+        const newDoc = document.createElement('div');
+        newDoc.className = 'form-check d-flex align-items-center gap-2 mt-2';
+        newDoc.innerHTML = `
+            <input class="form-check-input mt-0" type="checkbox" checked name="documents">
+            <input type="text" class="form-control form-control-sm" name="custom_docs" placeholder="Enter document name" required>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove(); updateChecklistProgressBar();">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        const checkbox = newDoc.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.addEventListener('change', updateChecklistProgressBar);
+        }
+        documentList.appendChild(newDoc);
+        updateChecklistProgressBar();
+    }
+    </script>
+    
 {% endblock %}
