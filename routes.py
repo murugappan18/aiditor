@@ -1842,9 +1842,12 @@ def client_notes():
             client_id = request.form['client_id']
             note_type = request.form['note_type']
             priority = request.form['priority']
-            follow_up_date = request.form.get('follow_up_date') or None
             title = request.form['title']
             content = request.form['content']
+
+            # ✅ Safely convert follow-up date string to Python date object
+            follow_up_date_str = request.form.get('follow_up_date')
+            follow_up_date = datetime.strptime(follow_up_date_str, '%Y-%m-%d').date() if follow_up_date_str else None
 
             new_note = ClientNote(
                 client_id=client_id,
@@ -1880,6 +1883,21 @@ def client_notes():
     clients = Client.query.all()
 
     return render_template('crm/client_notes.html', notes=notes, clients=clients, note_type=note_type)
+
+@main_bp.route('/crm/client-notes/delete/<int:note_id>', methods=['POST'])
+@login_required
+def delete_client_note(note_id):
+    note = ClientNote.query.get_or_404(note_id)
+    
+    try:
+        db.session.delete(note)
+        db.session.commit()
+        flash("Client note deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting note: {e}", "danger")
+    
+    return redirect(url_for('main.client_notes'))
 
 
 import json
