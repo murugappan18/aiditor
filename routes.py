@@ -1973,9 +1973,6 @@ def auto_reminders():
         active_count=active_count
     )
 
-
-
-
 @main_bp.route('/smart/auto-reminders/add', methods=['POST'])
 @login_required
 def save_auto_reminder():
@@ -1984,7 +1981,7 @@ def save_auto_reminder():
     days = int(request.form.get('days', 0))
     day_type = request.form.get('dayType')
     method = request.form.get('method')
-    status = request.form.get('status')
+    status = request.form.get('status', 'Active')
 
     message = request.form.get('messageTemplate', '')
 
@@ -1997,15 +1994,14 @@ def save_auto_reminder():
         reminder_date = base_date
 
     reminder = Reminder(
-    created_by=current_user.id,
-    title=name,
-    description=message or method,
-    reminder_type=trigger,
-    reminder_date=reminder_date,
-    status = request.form.get('status', 'Active').capitalize(),
-    auto_created=True
-)
-
+        created_by=current_user.id,
+        title=name,
+        description=message or method,
+        reminder_type=trigger,
+        reminder_date=reminder_date,
+        status = status.capitalize(),
+        auto_created=True
+    )
 
     db.session.add(reminder)
     db.session.commit()
