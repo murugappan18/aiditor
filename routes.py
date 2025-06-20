@@ -105,6 +105,14 @@ def edit_client(id):
 @login_required
 def delete_client(id):
     client = Client.query.get_or_404(id)
+
+    # Refresh the client to get the latest state from DB
+    db.session.refresh(client)
+
+    if OutstandingFee.query.filter_by(client_id=client.id).count() > 0:
+        flash("Cannot delete client with existing outstanding fees. Please remove them first.", "danger")
+        return redirect(url_for('main.clients'))
+    
     db.session.delete(client)
     db.session.commit()
     flash('Client deleted successfully.', 'success')
@@ -2341,6 +2349,8 @@ def send_email():
     else:
         clients = Client.query.filter(Client.id.in_(recipient_ids)).all()
 
+    template_name = EmailTemplate.query.get_or_404(template_id).template_name
+
     # Send emails
     try:
         with smtplib.SMTP(smtp_config.smtp_server, smtp_config.smtp_port) as server:
@@ -2368,7 +2378,7 @@ def send_email():
                     message=personalized_body,
                     recipient=client.name,
                     status='Sent',
-                    template_used=template_id or 'Custom',
+                    template_used=template_name or 'Custom',
                     created_by=current_user.id
                 )
                 db.session.add(log)
@@ -2386,11 +2396,16 @@ def send_email():
     return redirect(url_for('main.communications'))
 
 def substitute_vars(template, client):
+    # Fetch the most recent OutstandingFee entry for the client (if exists)
+    fee = OutstandingFee.query.filter_by(client_id=client.id).order_by(OutstandingFee.due_date.desc()).first()
+
     # Replace variables with client-specific values
     vars = {
         '{client_name}': client.name,
-        '{due_date}': client.due_date.strftime('%d-%m-%Y') if hasattr(client, 'due_date') and client.due_date else '',
-        '{amount}': str(client.amount) if hasattr(client, 'amount') else ''
+        '{due_date}': fee.due_date.strftime('%d-%m-%Y') if fee and fee.due_date else '',
+        '{amount}': str(fee.amount) if fee and fee.amount else '',
+        '{status}': fee.status if fee and fee.status else '',
+        '{invoice_number}': fee.invoice_number if fee and fee.invoice_number else ''
     }
     for var, value in vars.items():
         template = template.replace(var, value)
