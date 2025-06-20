@@ -81,13 +81,13 @@ function initializeFileUpload() {
  * Initialize date pickers
  */
 function initializeDatepickers() {
-    // Set default date format and restrictions
-    $('input[type="date"]').each(function() {
-        if (!$(this).val()) {
-            // Set max date to today for most date fields
-            if (!$(this).hasClass('future-date')) {
-                $(this).attr('max', new Date().toISOString().split('T')[0]);
-            }
+    // By default, allow future dates unless restricted explicitly
+    $('input[type="date"]').each(function () {
+        // Only restrict future dates for fields with this class
+        if ($(this).hasClass("restrict-future")) {
+            $(this).attr("max", new Date().toISOString().split("T")[0]);
+        } else {
+            $(this).removeAttr("max"); // ensure future dates are enabled
         }
     });
 }

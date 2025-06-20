@@ -92,7 +92,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.date_of_birth.label(class="form-label") }}
-                                {{ form.date_of_birth(class="form-control" + (" is-invalid" if form.date_of_birth.errors else "")) }}
+                                {{ form.date_of_birth(class="form-control restrict-future" + (" is-invalid" if form.date_of_birth.errors else "")) }}
                                 {% if form.date_of_birth.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in form.date_of_birth.errors %}{{ error }}{% endfor %}
@@ -102,7 +102,7 @@
                             </div>
                             <div class="col-md-6">
                                 {{ form.incorporation_date.label(class="form-label") }}
-                                {{ form.incorporation_date(class="form-control" + (" is-invalid" if form.incorporation_date.errors else "")) }}
+                                {{ form.incorporation_date(class="form-control restrict-future" + (" is-invalid" if form.incorporation_date.errors else "")) }}
                                 {% if form.incorporation_date.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in form.incorporation_date.errors %}{{ error }}{% endfor %}

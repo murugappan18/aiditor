@@ -7,6 +7,7 @@ from forms import *
 from utils import allowed_file, save_uploaded_file
 from datetime import datetime, date, timedelta
 from sqlalchemy import func, extract, distinct, or_
+from sqlalchemy.exc import IntegrityError
 from collections import OrderedDict
 from calendar import month_abbr
 
@@ -63,29 +64,37 @@ def clients():
 @main_bp.route('/clients/new', methods=['GET', 'POST'])
 @login_required
 def new_client():
-    form = ClientForm()
-    
-    if form.validate_on_submit():
-        client = Client(
-            name=form.name.data,
-            pan=form.pan.data,
-            gstin=form.gstin.data,
-            email=form.email.data,
-            phone=form.phone.data,
-            address=form.address.data,
-            date_of_birth=form.date_of_birth.data,
-            incorporation_date=form.incorporation_date.data,
-            client_type=form.client_type.data,
-            status=form.status.data,
-            created_by=current_user.id
-        )
+    try:
+        form = ClientForm()
         
-        db.session.add(client)
-        db.session.commit()
-        flash('Client created successfully!', 'success')
+        if form.validate_on_submit():
+            client = Client(
+                name=form.name.data,
+                pan=form.pan.data,
+                gstin=form.gstin.data,
+                email=form.email.data,
+                phone=form.phone.data,
+                address=form.address.data,
+                date_of_birth=form.date_of_birth.data,
+                incorporation_date=form.incorporation_date.data,
+                client_type=form.client_type.data,
+                status=form.status.data,
+                created_by=current_user.id
+            )
+            
+            db.session.add(client)
+            db.session.commit()
+            flash('Client created successfully!', 'success')
+            return redirect(url_for('main.clients'))
+        
+        return render_template('clients/form.html', form=form, title='New Client')
+
+    except IntegrityError as e:
+        if 'clients.pan' in str(e):
+            flash('Given PAN Number already exist', 'danger')
+        else:
+            flash('Error Occured due to creating Client', 'danger')
         return redirect(url_for('main.clients'))
-    
-    return render_template('clients/form.html', form=form, title='New Client')
 
 @main_bp.route('/clients/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
