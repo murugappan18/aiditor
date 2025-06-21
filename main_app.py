@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -19,8 +20,15 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "audit-app-secret-key-2024")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+def resource_path(relative_path):
+    """ Get path to resource, works for dev and for PyInstaller """
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+# Example usage
+db_path = resource_path("var/app-instance/audit_system.db")
 # Configure the database - using SQLite for local storage
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///audit_system.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize extensions

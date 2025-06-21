@@ -20,7 +20,7 @@ def login():
         if user and user.is_active and check_password_hash(user.password_hash, form.password.data):
             # Update last login
             user.last_login = datetime.utcnow()
-            from app import db
+            from main_app import db
             db.session.commit()
             
             login_user(user)

@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, make_response
 from flask_login import login_required, current_user
-from app import db
+from main_app import db
 from models import *
 from forms import *
 from utils import allowed_file, save_uploaded_file

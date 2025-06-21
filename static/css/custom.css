@@ -6,7 +6,13 @@
  html, body {
     height: 100%;
     margin: 0;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 70px;
+}
+
+.container-fluid {
+    flex: 1 0 auto;
 }
 
 .main-content {
@@ -333,6 +339,7 @@ body::-webkit-scrollbar {
     background: var(--bs-dark);
     border-right: 1px solid var(--bs-border-color);
     flex-shrink: 0;
+    padding-bottom: 70px;
 }
 
 .sidebar .nav-link {
@@ -352,10 +359,23 @@ body::-webkit-scrollbar {
 }
 
 /* Footer styling */
-footer {
+/* footer {
     background: var(--bs-secondary-bg);
     border-top: 1px solid var(--bs-border-color);
     padding: 1rem;
+} */
+
+/* Ensure footer sticks at bottom if content is small */
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030; /* stay above content if needed */
+    background: var(--bs-secondary-bg);
+    border-top: 1px solid var(--bs-border-color);
+    padding: 1rem;
+    text-align: center;
 }
 
 /* Print styles */
