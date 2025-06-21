@@ -20,7 +20,7 @@
         <div class="card text-center">
             <div class="card-body">
                 <h5 class="card-title text-primary">Active Checklists</h5>
-                <h2 class="display-4">18</h2>
+                <h2 class="display-4">{{ active_checklists_count }}</h2>
                 <small class="text-muted">In Progress</small>
             </div>
         </div>
@@ -29,7 +29,7 @@
         <div class="card text-center">
             <div class="card-body">
                 <h5 class="card-title text-success">Completed</h5>
-                <h2 class="display-4">42</h2>
+                <h2 class="display-4">{{ completed_checklists_count }}</h2>
                 <small class="text-muted">This Month</small>
             </div>
         </div>
@@ -38,7 +38,7 @@
         <div class="card text-center">
             <div class="card-body">
                 <h5 class="card-title text-warning">Overdue</h5>
-                <h2 class="display-4">5</h2>
+                <h2 class="display-4">{{ overdue_checklists_count }}</h2>
                 <small class="text-muted">Past Due Date</small>
             </div>
         </div>
@@ -47,7 +47,7 @@
         <div class="card text-center">
             <div class="card-body">
                 <h5 class="card-title text-info">Avg Completion</h5>
-                <h2 class="display-4">87%</h2>
+                <h2 class="display-4">{{ avg_completion_rate }}%</h2>
                 <small class="text-muted">Document Rate</small>
             </div>
         </div>
@@ -92,10 +92,13 @@
                         <td class="{% if checklist.overdue %}text-danger{% endif %}">{{ checklist.due_date }}</td>
                         <td>
                             <div class="progress" style="height: 20px;">
-                                <div class="progress-bar bg-{{ checklist.progress_color }}" style="width: {{ checklist.progress }}%">{{ checklist.progress }}%</div>
+                                <div class="progress-bar bg-{{ checklist.progress_color }}" style="width: {{ checklist.progress }}%;">
+                                    {{ checklist.progress }}%
+                                </div>
                             </div>
-                            <small class="text-muted">{{ checklist.received }} checked / {{ checklist.total }} total documents</small>
-
+                            <small class="text-muted">
+                                {{ checklist.received }} checked / {{ checklist.total }} total documents
+                            </small>
                         </td>
                         <td><span class="badge bg-{{ checklist.status_color }}">{{ checklist.status }}</span></td>
                         <td>
@@ -294,7 +297,7 @@
         link.download = `${data.client.replace(/\s+/g, '_')}_Checklist.txt`;
         link.click();
     }
-    
+
     // ✅ Live Progress Update
     function updateChecklistProgressBar() {
         const checkboxes = document.querySelectorAll('#documentList input[type="checkbox"]');
@@ -356,14 +359,25 @@
             const template = templates.querySelector('.' + templateClass);
             if (template) {
                 const checkboxes = template.querySelectorAll('.form-check');
+                const docNames = [];
+
                 checkboxes.forEach((check) => {
                     const clone = check.cloneNode(true);
                     const checkbox = clone.querySelector('input[type="checkbox"]');
                     if (checkbox) {
+                        docNames.push(checkbox.value);
                         checkbox.addEventListener('change', updateChecklistProgressBar);
                     }
                     documentList.appendChild(clone);
                 });
+
+                // Add hidden input
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'required_docs';
+                hiddenInput.value = JSON.stringify(docNames);
+                documentList.appendChild(hiddenInput);
+
                 updateChecklistProgressBar();
             }
         });
@@ -375,8 +389,8 @@
         const newDoc = document.createElement('div');
         newDoc.className = 'form-check d-flex align-items-center gap-2 mt-2';
         newDoc.innerHTML = `
-            <input class="form-check-input mt-0" type="checkbox" checked name="documents">
-            <input type="text" class="form-control form-control-sm" name="custom_docs" placeholder="Enter document name" required>
+            <input class="form-check-input mt-0" type="checkbox" checked name="documents" value="" onchange="this.nextElementSibling.disabled = !this.checked;">
+            <input type="text" class="form-control form-control-sm" name="custom_docs" placeholder="Enter document name" required oninput="this.previousElementSibling.value = this.value">
             <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove(); updateChecklistProgressBar();">
                 <i class="fas fa-trash"></i>
             </button>

@@ -2226,13 +2226,26 @@ def document_checklists():
     clients = Client.query.order_by(Client.name).all()
 
     checklists = []
+    active_count = completed_count = overdue_count = 0
+    total_docs = completed_docs = 0
+
     for c in raw_checklists:
-        # Safely parse JSON fields
         required_docs = json.loads(c.documents_required or "[]")
         received_docs = json.loads(c.documents_received or "[]")
         total = len(required_docs)
         received = len(received_docs)
         progress = int((received / total) * 100) if total else 0
+
+        # Tally for dashboard cards
+        if c.status.lower() == "completed":
+            completed_count += 1
+        elif c.due_date and c.due_date < date.today() and progress < 100:
+            overdue_count += 1
+        else:
+            active_count += 1
+
+        total_docs += total
+        completed_docs += received
 
         checklist = {
             'id': c.id,
@@ -2253,7 +2266,18 @@ def document_checklists():
 
         checklists.append(checklist)
 
-    return render_template('crm/document_checklists.html', checklists=checklists, clients=clients)
+    # Compute avg completion
+    avg_completion_rate = round((completed_docs / total_docs) * 100, 1) if total_docs else 0
+
+    return render_template(
+        'crm/document_checklists.html',
+        checklists=checklists,
+        clients=clients,
+        active_checklists_count=active_count,
+        completed_checklists_count=completed_count,
+        overdue_checklists_count=overdue_count,
+        avg_completion_rate=avg_completion_rate
+    )
 
 
 # Form Submission Route
@@ -2268,13 +2292,18 @@ def create_checklist():
         service_type = form.get("service")
         due_date = datetime.strptime(form.get("due_date"), "%Y-%m-%d").date()
 
-        # Get documents
-        documents = request.form.getlist("documents")         # Checked default documents
-        custom_docs = request.form.getlist("custom_docs")     # All custom added documents
+        # All input checkboxes are named "documents" – default AND custom – so just use:
+        documents = request.form.getlist("documents")         # includes both default and custom, all checked
+        custom_docs = request.form.getlist("custom_docs")     # only the names for custom doc inputs
 
-        all_documents = documents + custom_docs
+        required_docs = json.loads(request.form.get("required_docs", "[]"))
+
+        # all_documents includes required ones (checkboxes + custom text names)
+        all_documents = required_docs + [doc for doc in custom_docs if doc not in required_docs]
+
+        # Now total and checked count
         total_docs = len(all_documents)
-        checked_docs = len(documents)  # Assume only default docs are initially checked
+        checked_docs = len(documents)
         percentage = int((checked_docs / total_docs) * 100) if total_docs else 0
 
         new_checklist = DocumentChecklist(
