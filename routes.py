@@ -1067,6 +1067,23 @@ def task_manager():
     form = TaskForm()
     form.employee_id.choices = [(e.id, e.name) for e in Employee.query.all()]
 
+    tasks = Task.query.order_by(Task.start_date.desc()).all()
+
+    # Task counts
+    active_tasks_count = Task.query.filter_by(status='In Progress').count()
+    pending_tasks_count = Task.query.filter_by(status='Pending').count()
+    completed_tasks_count = Task.query.filter_by(status='Completed').count()
+
+    # Overdue tasks: end_date < today AND not completed
+    today = date.today()
+    overdue_tasks_count = Task.query.filter(Task.end_date < today, Task.status != 'Completed').count()
+
+    # Average completion rate
+    total_tasks = Task.query.count()
+    if total_tasks == 0:
+        avg_completion = 0
+    else:
+        avg_completion = round((completed_tasks_count / total_tasks) * 100)
 
     if form.validate_on_submit():
         task_id = form.task_id.data
@@ -1099,7 +1116,16 @@ def task_manager():
         return redirect(url_for('main.task_manager'))
 
     tasks = Task.query.order_by(Task.start_date.desc()).all()
-    return render_template('erp/task_manager.html', tasks=tasks, form=form)
+    return render_template(
+        'erp/task_manager.html',
+        tasks=tasks,
+        form=form,
+        active_tasks_count=active_tasks_count,
+        pending_tasks_count=pending_tasks_count,
+        completed_tasks_count=completed_tasks_count,
+        overdue_tasks_count=overdue_tasks_count,
+        avg_completion=avg_completion
+    )
 
 
 @main_bp.route('/erp/delete-task/<int:task_id>', methods=['POST'])
