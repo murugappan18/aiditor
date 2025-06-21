@@ -1061,6 +1061,56 @@ def follow_ups():
     
     return render_template('crm/follow_ups.html', follow_ups=pending_followups)
 
+@main_bp.route('/erp/task-manager', methods=['GET', 'POST'])
+@login_required
+def task_manager():
+    form = TaskForm()
+    form.employee_id.choices = [(e.id, e.name) for e in Employee.query.all()]
+
+
+    if form.validate_on_submit():
+        task_id = form.task_id.data
+        if task_id:
+            task = Task.query.get(int(task_id))
+            if task:
+                task.employee_id = form.employee_id.data
+                task.start_date = form.start_date.data
+                task.end_date = form.end_date.data
+                task.priority = form.priority.data
+                task.status = form.status.data
+                task.description = form.description.data
+                flash('Task updated successfully!', 'success')
+            else:
+                flash('Task not found.', 'danger')
+        else:
+            task = Task(
+                employee_id=form.employee_id.data,
+                start_date=form.start_date.data,
+                end_date=form.end_date.data,
+                priority=form.priority.data,
+                status=form.status.data,
+                description=form.description.data,
+                created_at=datetime.utcnow()
+            )
+            db.session.add(task)
+            flash('Task created successfully!', 'success')
+
+        db.session.commit()
+        return redirect(url_for('main.task_manager'))
+
+    tasks = Task.query.order_by(Task.start_date.desc()).all()
+    return render_template('erp/task_manager.html', tasks=tasks, form=form)
+
+
+@main_bp.route('/erp/delete-task/<int:task_id>', methods=['POST'])
+@login_required
+def delete_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    db.session.delete(task)
+    db.session.commit()
+    flash('Task deleted successfully.', 'success')
+    return redirect(url_for('main.task_manager'))
+
 # ERP Routes
 @main_bp.route('/inventory')
 @login_required

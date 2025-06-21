@@ -119,6 +119,24 @@ class EmployeeForm(FlaskForm):
         ('Inactive', 'Inactive')
     ], default='Active')
 
+class TaskForm(FlaskForm):
+    employee_id = SelectField('Employee', coerce=int, validators=[DataRequired()])
+    start_date = DateField('Start Date', validators=[DataRequired()])
+    end_date = DateField('End Date', validators=[DataRequired()])
+    priority = SelectField('Priority', choices=[
+        ('Low', 'Low'),
+        ('Normal', 'Normal'),
+        ('High', 'High')
+    ], validators=[DataRequired()])
+    status = SelectField('Status', choices=[
+        ('Pending', 'Pending'),
+        ('In Progress', 'In Progress'),
+        ('Completed', 'Completed')
+    ], validators=[DataRequired()])
+    description = TextAreaField('Description', validators=[Optional()])
+    task_id = HiddenField()  # for editing existing tasks
+
+
 class PayrollEntryForm(FlaskForm):
     employee_id = SelectField('Employee', coerce=int, validators=[DataRequired()])
     month_year = StringField('Month/Year', validators=[DataRequired(), Length(max=10)])

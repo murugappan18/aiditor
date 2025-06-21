@@ -121,6 +121,21 @@ class Employee(db.Model):
     
     payroll_entries = relationship('PayrollEntry', backref='employee', lazy='dynamic')
 
+class Task(db.Model):
+    __tablename__ = 'tasks'
+
+    id = Column(Integer, primary_key=True)
+    employee_id = Column(Integer, ForeignKey('employees.id'), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    priority = Column(String(20), nullable=False)
+    description = Column(Text)
+    status = Column(String(50), default="In Progress")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    employee = relationship('Employee', backref='tasks')  
+
+
 class PayrollEntry(db.Model):
     __tablename__ = 'payroll_entries'
     
