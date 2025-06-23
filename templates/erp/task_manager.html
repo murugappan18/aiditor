@@ -142,7 +142,7 @@
 <div class="modal fade" id="assignTaskModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form method="POST" action="{{ url_for('main.task_manager') }}">
+            <form method="POST" action="{{ url_for('main.task_manager') }}" class="needs-validation" novalidate>
                 {{ form.hidden_tag() }}
                 <input type="hidden" name="task_id" id="task_id">
                 <div class="modal-header">
@@ -214,7 +214,34 @@ document.addEventListener('DOMContentLoaded', function () {
             document.querySelector('[name="description"]').value = description;
         });
     });
+
+    // Add start-end date validation here
+    const startDateInput = document.querySelector('[name="start_date"]');
+    const endDateInput = document.querySelector('[name="end_date"]');
+
+    function validateDates() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+
+        if (startDate && endDate && endDate < startDate) {
+            endDateInput.setCustomValidity("End date cannot be before start date");
+            endDateInput.classList.add("is-invalid");
+            endDateInput.classList.remove("is-valid");
+        } else {
+            endDateInput.setCustomValidity("");
+            endDateInput.classList.remove("is-invalid");
+            if (endDateInput.value) {
+                endDateInput.classList.add("is-valid");
+            }
+        }
+    }
+
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener("change", validateDates);
+        endDateInput.addEventListener("change", validateDates);
+    }
 });
 </script>
+
 
 {% endblock %}

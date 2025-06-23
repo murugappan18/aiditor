@@ -19,6 +19,7 @@
     
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+   
 </head>
 <body>
     <div class="d-flex flex-column min-vh-100">
@@ -183,7 +184,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.communications') }}">
+                                <a class="nav-link" href="{{ url_for('main.communications') }}" >
                                     <i class="fas fa-envelope me-2"></i>SMS/Email
                                 </a>
                             </li>
@@ -297,5 +298,9 @@
         
         {% block scripts %}{% endblock %}
     </div>
+
+    
+
+
 </body>
 </html>

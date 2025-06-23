@@ -237,7 +237,7 @@
                             </div>
                             <div class="col-md-6">
                                 {{ form.month_year.label(class="form-label") }}
-                                {{ form.month_year(class="form-control", placeholder="03-2024") }}
+                                {{ form.month_year(class="form-control", placeholder="MM-YYYY", id="monthYear", maxlength="7", pattern="^(0[1-9]|1[0-2])-(19|20)\\d{2}$") }}
                             </div>
                         </div>
                         
@@ -316,7 +316,14 @@
                             </div>
                             <div class="col-md-6">
                                 {{ form.month_year.label(class="form-label") }}
-                                <input type="text" name="month_year" class="form-control" value="{{ entry.month_year }}">
+                                <input type="text"
+                                        name="month_year"
+                                        class="form-control"
+                                        value="{{ entry.month_year }}"
+                                        pattern="^(0[1-9]|1[0-2])-(19|20)\d{2}$"
+                                        maxlength="7"
+                                        title="Enter in MM-YYYY format (e.g., 03-2024)">
+
                             </div>
                         </div>
 
@@ -415,7 +422,7 @@
                                 <h6>Payroll Info</h6>
                                 <table class="table table-sm">
                                     <tr>
-                                        <td><strong>Month/Year:</strong></td>
+                                        <td><strong>Month-Year:</strong></td>
                                         <td>{{ entry.month_year }}</td>
                                     </tr>
                                     <tr>
@@ -460,82 +467,98 @@
 
 {% block scripts %}
 <script>
-    $(document).ready(function() {
-        $('#payrollTable').DataTable({
-            "paging": false,
-            "info": false,
-            "searching": true,
-            "ordering": true,
-            "columnDefs": [
-                { "orderable": false, "targets": -1 }
-            ]
+    $(document).ready(function () {
+        // Initialize DataTable
+        const table = $('#payrollTable').DataTable({
+            paging: false,
+            info: false,
+            searching: true,
+            ordering: true,
+            columnDefs: [{ orderable: false, targets: -1 }]
         });
-        
-        // Auto-calculate net salary
+
+        // Auto-calculate net salary (create form)
         $('#basicSalary, #allowances, #deductions, #pfDeduction, #tdsDeduction').on('input', calculateNetSalary);
 
-        // Month filter
-        $('#monthFilter').on('change', function() {
-            const month = $(this).val();
-            // Implement filtering logic
-            console.log('Filtering by month:', month);
+        // Auto-calculate net salary (edit modal)
+        $(document).on('input', '#editbasicSalary, #editallowances, #editdeductions, #editpfDeduction, #edittdsDeduction', function () {
+            const modal = $(this).closest('.modal');
+            const basic = parseFloat(modal.find('#editbasicSalary').val()) || 0;
+            const allowances = parseFloat(modal.find('#editallowances').val()) || 0;
+            const deductions = parseFloat(modal.find('#editdeductions').val()) || 0;
+            const pf = parseFloat(modal.find('#editpfDeduction').val()) || 0;
+            const tds = parseFloat(modal.find('#edittdsDeduction').val()) || 0;
+
+            const netSalary = basic + allowances - deductions - pf - tds;
+            modal.find('#editnetSalary').val('₹' + netSalary.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
         });
-        const search_field = {{ search_emp_id | default('""') | tojson}};
+
+        // Filter by month
+        $('#monthFilter').on('change', function () {
+            const month = $(this).val();
+            console.log('Filtering by month:', month);
+            // Add filtering logic if needed
+        });
+
+        // Search field
+        const search_field = {{ search_emp_id | default('""') | tojson }};
         if (search_field) {
-            let table = $('#payrollTable').DataTable(); // Get DataTable instance
-            table.search(search_field).draw();          // Perform search and redraw table
+            table.search(search_field).draw();
         }
+
+        // Auto-populate basic salary on employee selection
+        $('#employee_id').on('change', function () {
+            const employeeId = $(this).val();
+            if (employeeId) {
+                fetch(`/api/employees/${employeeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.salary) {
+                            $('#basicSalary').val(data.salary);
+                            calculateNetSalary();
+                        }
+                    })
+                    .catch(error => console.log('Could not fetch employee salary'));
+            }
+        });
+
+        // Month-Year input validation (both create and edit forms)
+        $('input[name="month_year"]').on('input', function () {
+            const value = this.value.trim();
+            const regex = /^(0[1-9]|1[0-2])-(19|20)\d{2}$/;
+
+            if (value === "" || regex.test(value)) {
+                this.setCustomValidity("");
+                this.classList.remove("is-invalid");
+            } else {
+                this.setCustomValidity("Enter a valid month in MM-YYYY format");
+                this.classList.add("is-invalid");
+            }
+        });
     });
-    
+
+    // Net salary calculator for new form
     function calculateNetSalary() {
         const basic = parseFloat($('#basicSalary').val()) || 0;
         const allowances = parseFloat($('#allowances').val()) || 0;
         const deductions = parseFloat($('#deductions').val()) || 0;
         const pf = parseFloat($('#pfDeduction').val()) || 0;
         const tds = parseFloat($('#tdsDeduction').val()) || 0;
-        
+
         const netSalary = basic + allowances - deductions - pf - tds;
-        $('#netSalary').val('₹' + netSalary.toLocaleString('en-IN', {minimumFractionDigits: 2}));
+        $('#netSalary').val('₹' + netSalary.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
     }
 
-    $(document).on('input', '#editbasicSalary, #editallowances, #editdeductions, #editpfDeduction, #edittdsDeduction', function () {
-        const modal = $(this).closest('.modal');
-
-        const basic = parseFloat(modal.find('#editbasicSalary').val()) || 0;
-        const allowances = parseFloat(modal.find('#editallowances').val()) || 0;
-        const deductions = parseFloat(modal.find('#editdeductions').val()) || 0;
-        const pf = parseFloat(modal.find('#editpfDeduction').val()) || 0;
-        const tds = parseFloat(modal.find('#edittdsDeduction').val()) || 0;
-
-        const netSalary = basic + allowances - deductions - pf - tds;
-
-        modal.find('#editnetSalary').val('₹' + netSalary.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
-    });
-    
+    // Placeholder: Individual payslip download
     function downloadPayslip(id) {
         alert('Download payslip functionality to be implemented for Payroll ID: ' + id);
     }
-    
+
+    // Placeholder: Bulk payslip generation
     function generatePayslips() {
         alert('Bulk payslip generation functionality to be implemented');
     }
-    
-    // Auto-populate basic salary when employee is selected
-    $('#employee_id').on('change', function() {
-        const employeeId = $(this).val();
-        if (employeeId) {
-            // Fetch employee salary and auto-populate
-            fetch(`/api/employees/${employeeId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.salary) {
-                        $('#basicSalary').val(data.salary);
-                        calculateNetSalary();
-                    }
-                })
-                .catch(error => console.log('Could not fetch employee salary'));
-        }
-    });
-
 </script>
+
+
 {% endblock %}

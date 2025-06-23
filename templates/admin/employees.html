@@ -273,25 +273,25 @@
                             </div>
                             <div class="col-md-4">
                                 {{ form.employee_id.label(class="form-label") }}
-                                {{ form.employee_id(class="form-control", placeholder="Auto-generated") }}
+                                {{ form.employee_id(class="form-control", placeholder="Auto-generated", id="employee_id") }}
                             </div>
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.email.label(class="form-label") }}
-                                {{ form.email(class="form-control") }}
+                                {{ form.email(class="form-control", id="email") }}
                             </div>
                             <div class="col-md-6">
                                 {{ form.phone.label(class="form-label") }}
-                                {{ form.phone(class="form-control") }}
+                                {{ form.phone(class="form-control", id="phone", maxlength="10") }}
                             </div>
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.pan.label(class="form-label") }}
-                                {{ form.pan(class="form-control", placeholder="ABCDE1234F") }}
+                                {{ form.pan(class="form-control", placeholder="ABCDE1234F", id="pan") }}
                             </div>
                             <div class="col-md-6">
                                 {{ form.date_of_joining.label(class="form-label") }}
@@ -361,18 +361,18 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.email.label(class="form-label") }}
-                                <input type="text" name="email" class="form-control" value="{{ employee.email }}">
+                                <input type="text" id="email{{ employee.id }}" name="email" class="form-control" value="{{ employee.email }}">
                             </div>
                             <div class="col-md-6">
                                 {{ form.phone.label(class="form-label") }}
-                                <input type="text" name="phone" class="form-control" value="{{ employee.phone }}">
+                                <input type="text" id="phone{{ employee.id }}" name="phone" class="form-control" value="{{ employee.phone }}" maxlength="10">
                             </div>
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.pan.label(class="form-label") }}
-                                <input type="text" name="pan" class="form-control" value="{{ employee.pan }}">
+                                <input type="text" id="pan{{ employee.id }}" name="pan" class="form-control" value="{{ employee.pan }}">
                             </div>
                             <div class="col-md-6">
                                 {{ form.date_of_joining.label(class="form-label") }}
@@ -499,39 +499,95 @@
 
 {% block scripts %}
 <script>
-    $(document).ready(function() {
-        $('#employeesTable').DataTable({
-            "paging": false,
-            "info": false,
-            "searching": true,
-            "ordering": true,
-            "columnDefs": [
-                { "orderable": false, "targets": -1 }
-            ]
-        });
-        
-        // Department and status filters
-        $('#departmentFilter, #statusFilter').on('change', function() {
-            // Implement filtering logic
-            console.log('Filtering employees');
-        });
+$(document).ready(function () {
+    // Initialize DataTable
+    $('#employeesTable').DataTable({
+        paging: false,
+        info: false,
+        searching: true,
+        ordering: true,
+        columnDefs: [
+            { orderable: false, targets: -1 }
+        ]
     });
-    
+
+    // Department and status filters (placeholder)
+    $('#departmentFilter, #statusFilter').on('change', function () {
+        console.log('Filtering employees');
+    });
+
     // Auto-format PAN input
-    $(document).on('input', '#pan', function() {
+    $('#pan').on('input', function () {
         this.value = this.value.toUpperCase();
     });
-    
+
     // Auto-generate employee ID
-    $('#name').on('blur', function() {
+    $('#name').on('blur', function () {
         if (!$('#employee_id').val()) {
             const name = $(this).val();
             if (name) {
-                const initials = name.split(' ').map(word => word[0]).join('').toUpperCase();
+                const initials = name
+                    .split(' ')
+                    .map(word => word[0])
+                    .join('')
+                    .toUpperCase();
                 const timestamp = Date.now().toString().slice(-4);
                 $('#employee_id').val('EMP' + initials + timestamp);
             }
         }
     });
+
+    // Real-time email validation
+    $('#email').on('input', function () {
+        const email = this.value.trim();
+        const regex = /^(?!.*\.\.)[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        this.setCustomValidity(email === "" || regex.test(email) ? "" : "Invalid email format");
+    });
+
+    // Real-time phone validation
+    $('#phone').on('input', function () {
+        const phone = this.value.trim();
+        const regex = /^[6-9]\d{9}$/;
+        this.setCustomValidity(phone === "" || regex.test(phone) ? "" : "Invalid phone number");
+    });
+
+    // Real-time PAN validation
+    $('#pan').on('input', function () {
+        const pan = this.value.toUpperCase();
+        const regex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+        this.value = pan;
+        this.setCustomValidity(pan === "" || regex.test(pan) ? "" : "Invalid PAN format");
+    });
+
+});
+
+$(document).ready(function () {
+    {% if employees and employees.items %}
+        {% for employee in employees.items %}
+            // Real-time email validation for Edit Modal
+            $('#email{{ employee.id }}').on('input', function () {
+                const email = this.value.trim();
+                const regex = /^(?!.*\.\.)[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                this.setCustomValidity(email === "" || regex.test(email) ? "" : "Invalid email format");
+            });
+
+            // Real-time phone validation for Edit Modal
+            $('#phone{{ employee.id }}').on('input', function () {
+                const phone = this.value.trim();
+                const regex = /^[6-9]\d{9}$/;
+                this.setCustomValidity(phone === "" || regex.test(phone) ? "" : "Invalid phone number");
+            });
+
+            // Real-time PAN validation for Edit Modal
+            $('#pan{{ employee.id }}').on('input', function () {
+                const pan = this.value.toUpperCase();
+                const regex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+                this.value = pan;
+                this.setCustomValidity(pan === "" || regex.test(pan) ? "" : "Invalid PAN format");
+            });
+        {% endfor %}
+    {% endif %}
+});
 </script>
+
 {% endblock %}
