@@ -20,7 +20,7 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 1rem 70px 70px;
 }
 
 .sidebar::-webkit-scrollbar,
@@ -305,8 +305,17 @@ body::-webkit-scrollbar {
 
 /* Navigation enhancements */
 .navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-weight: 600;
     letter-spacing: 0.5px;
+}
+
+.navbar-brand img {
+    /* margin-right: 8px; reduce or increase this as needed */
+    height: 40px;
+    width: 70px;
 }
 
 .nav-link {
