@@ -3,7 +3,7 @@ from flask_wtf.file import FileField, FileAllowed
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SelectField, SubmitField, TextAreaField, DateField, FloatField, IntegerField, BooleanField, HiddenField
-from wtforms.validators import DataRequired, InputRequired, Email, Length, Optional, NumberRange
+from wtforms.validators import DataRequired, InputRequired, Email, Length, Optional, NumberRange, Regexp
 from wtforms.widgets import TextArea
 
 
@@ -12,14 +12,42 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
 
 class ClientForm(FlaskForm):
-    name = StringField('Client Name', validators=[DataRequired(), Length(max=200)])
-    pan = StringField('PAN', validators=[Optional(), Length(min=10, max=10)])
-    gstin = StringField('GSTIN', validators=[Optional(), Length(min=15, max=15)])
-    email = StringField('Email', validators=[Optional(), Email()])
-    phone = StringField('Phone', validators=[Optional(), Length(max=15)])
-    address = TextAreaField('Address', validators=[Optional()])
+    name = StringField('Client Name', validators=[
+        DataRequired(message="Client name is required"),
+        Length(max=200, message="Name must be under 200 characters")
+    ])
+
+    pan = StringField('PAN', validators=[
+        Optional(),
+        Length(min=10, max=10, message="PAN must be 10 characters"),
+        Regexp(r'^[A-Z]{5}[0-9]{4}[A-Z]$', message="PAN format is invalid (e.g. ABCDE1234F)")
+    ])
+
+    gstin = StringField('GSTIN', validators=[
+        Optional(),
+        Length(min=15, max=15, message="GSTIN must be 15 characters"),
+        Regexp(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$', message="GSTIN format is invalid")
+    ])
+
+    email = StringField('Email', validators=[
+        Optional(),
+        Email(message="Invalid email address")
+    ])
+
+    phone = StringField('Phone', validators=[
+        Optional(),
+        Regexp(r'^[6-9]\d{9}$', message="Enter a valid 10-digit phone number")
+    ])
+
+    address = TextAreaField('Address', validators=[
+        Optional(),
+        Length(max=500, message="Address too long")
+    ])
+
     date_of_birth = DateField('Date of Birth', validators=[Optional()])
+
     incorporation_date = DateField('Incorporation Date', validators=[Optional()])
+
     client_type = SelectField('Client Type', choices=[
         ('Individual', 'Individual'),
         ('Company', 'Company'),
@@ -27,11 +55,12 @@ class ClientForm(FlaskForm):
         ('LLP', 'LLP'),
         ('Trust', 'Trust'),
         ('Society', 'Society')
-    ], validators=[DataRequired()])
+    ], validators=[DataRequired(message="Client type is required")])
+
     status = SelectField('Status', choices=[
         ('Active', 'Active'),
         ('Inactive', 'Inactive')
-    ], default='Active')
+    ], default='Active', validators=[DataRequired(message="Status is required")])
 
 class IncomeTaxReturnForm(FlaskForm):
     client_id = SelectField('Client', coerce=int, validators=[DataRequired()])

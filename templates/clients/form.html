@@ -19,20 +19,22 @@
                         <div class="row mb-3">
                             <div class="col-md-8">
                                 {{ form.name.label(class="form-label") }}
-                                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                                {{ form.name(id="clientName", class="form-control" + (" is-invalid" if form.name.errors else "")) }}
                                 {% if form.name.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.name.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                    {% for error in form.name.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="invalid-feedback" id="nameError">Client Name is Required.</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-4">
                                 {{ form.client_type.label(class="form-label") }}
                                 {{ form.client_type(class="form-select" + (" is-invalid" if form.client_type.errors else "")) }}
                                 {% if form.client_type.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.client_type.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                    {% for error in form.client_type.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
                                 {% endif %}
                             </div>
                         </div>
@@ -40,20 +42,24 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.pan.label(class="form-label") }}
-                                {{ form.pan(class="form-control" + (" is-invalid" if form.pan.errors else ""), placeholder="ABCDE1234F") }}
+                                {{ form.pan(class="form-control" + (" is-invalid" if form.pan.errors else ""), id="pan", placeholder="ABCDE1234F") }}
                                 {% if form.pan.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.pan.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                    {% for error in form.pan.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="invalid-feedback" id="panError">PAN is Required.</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6">
                                 {{ form.gstin.label(class="form-label") }}
-                                {{ form.gstin(class="form-control" + (" is-invalid" if form.gstin.errors else ""), placeholder="22ABCDE1234F1Z5") }}
+                                {{ form.gstin(class="form-control" + (" is-invalid" if form.gstin.errors else ""), id="gstin", placeholder="22ABCDE1234F1Z5") }}
                                 {% if form.gstin.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.gstin.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                    {% for error in form.gstin.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="invalid-feedback" id="gstinError">GSTIN is Required</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -61,20 +67,24 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.email.label(class="form-label") }}
-                                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                                {{ form.email(id="email", class="form-control" + (" is-invalid" if form.email.errors else "")) }}
                                 {% if form.email.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.email.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                    {% for error in form.email.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="invalid-feedback" id="emailError"></div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6">
                                 {{ form.phone.label(class="form-label") }}
-                                {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                                {{ form.phone(id="phone", class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
                                 {% if form.phone.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.phone.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                    {% for error in form.phone.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="invalid-feedback" id="phoneError"></div>
                                 {% endif %}
                             </div>
                         </div>
@@ -83,30 +93,34 @@
                             {{ form.address.label(class="form-label") }}
                             {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows="3") }}
                             {% if form.address.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.address.errors %}{{ error }}{% endfor %}
-                                </div>
+                                {% for error in form.address.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
                             {% endif %}
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.date_of_birth.label(class="form-label") }}
-                                {{ form.date_of_birth(class="form-control restrict-future" + (" is-invalid" if form.date_of_birth.errors else "")) }}
+                                {{ form.date_of_birth(id="date_of_birth", class="form-control restrict-future" + (" is-invalid" if form.date_of_birth.errors else "")) }}
                                 {% if form.date_of_birth.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.date_of_birth.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                    {% for error in form.date_of_birth.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="invalid-feedback" id="dobError">Date of birth is required.</div>
                                 {% endif %}
                                 <div class="form-text">For individuals only</div>
                             </div>
                             <div class="col-md-6">
                                 {{ form.incorporation_date.label(class="form-label") }}
-                                {{ form.incorporation_date(class="form-control restrict-future" + (" is-invalid" if form.incorporation_date.errors else "")) }}
+                                {{ form.incorporation_date(id="incorporation_date", class="form-control restrict-future" + (" is-invalid" if form.incorporation_date.errors else "")) }}
                                 {% if form.incorporation_date.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.incorporation_date.errors %}{{ error }}{% endfor %}
-                                    </div>
+                                    {% for error in form.incorporation_date.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="invalid-feedback" id="incorpError">Incorporation Date is Required</div>
                                 {% endif %}
                                 <div class="form-text">For companies/entities only</div>
                             </div>
@@ -116,9 +130,9 @@
                             {{ form.status.label(class="form-label") }}
                             {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
                             {% if form.status.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.status.errors %}{{ error }}{% endfor %}
-                                </div>
+                                {% for error in form.status.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
                             {% endif %}
                         </div>
                         
@@ -126,7 +140,7 @@
                             <a href="{{ url_for('main.clients') }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Back to Clients
                             </a>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
                                 <i class="fas fa-save me-2"></i>Save Client
                             </button>
                         </div>
@@ -140,14 +154,171 @@
 
 {% block scripts %}
 <script>
-    // Auto-format PAN input
-    $('#pan').on('input', function() {
-        this.value = this.value.toUpperCase();
+    $(document).ready(function () {
+        $('#clientName').trigger('input');
+        $('#pan').trigger('input');
+        $('#gstin').trigger('input');
+        $('#email').trigger('input');
+        $('#phone').trigger('input');
+        $('#date_of_birth').trigger('input');
+        $('#incorporation_date').trigger('input');
+        validateForm();
+    });
+
+    // Form Validation
+    function validateForm() {
+        const isNameValid = $('#clientName').hasClass('is-valid');
+        const isPanValid = $('#pan').hasClass('is-valid');
+        const isGstinValid = $('#gstin').val() === '' || $('#gstin').hasClass('is-valid');
+        const isEmailValid = $('#email').val() === '' || $('#email').hasClass('is-valid');
+        const isPhoneValid = $('#phone').val() === '' || $('#phone').hasClass('is-valid');
+        const isDOBValid = $('#date_of_birth').is(':visible') ? $('#date_of_birth').hasClass('is-valid') : true;
+        const isIncorpValid = $('#incorporation_date').is(':visible') ? $('#incorporation_date').hasClass('is-valid') : true;
+
+        const saveBtn = $('#submitBtn');
+
+        if (isNameValid && isPanValid && isGstinValid && isEmailValid && isPhoneValid && isDOBValid && isIncorpValid) {
+            saveBtn.prop('disabled', false);
+        } else {
+            saveBtn.prop('disabled', true);
+        }
+    }
+
+    // Client Name Validation
+    $('#clientName').on('input', function () {
+        const name = this.value.trim();
+        const errorDiv = document.getElementById('nameError');
+
+        if (name === '') {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'Client Name is required.';
+            errorDiv.style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            errorDiv.style.display = 'none';
+        }
+        validateForm();
+    });
+
+    // Email Validation
+    $('#email').on('input', function () {
+        const email = this.value.trim();
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const errorDiv = document.getElementById('emailError');
+
+        if (email.trim() === '' || !emailPattern.test(email)) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            if(email.trim() === '')
+                errorDiv.textContent = 'Email is required.';
+            else
+                errorDiv.textContent = 'Email Format is Invalid. (eg: example@domain.com)';
+            errorDiv.style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            errorDiv.style.display = 'none';
+        }
+        validateForm();
+    });
+
+    //Phone Validation
+    $('#phone').on('input', function () {
+        // Keep only digits and limit to 10
+        let sanitized = this.value.replace(/\D/g, '').slice(0, 10);
+        this.value = sanitized;
+
+        const phonePattern = /^[6-9]\d{9}$/;
+        const errorDiv = document.getElementById('phoneError');
+
+        if (sanitized === '' || !phonePattern.test(sanitized)) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+
+            errorDiv.textContent = sanitized === ''
+                ? 'Phone is required.'
+                : 'Phone Format is Invalid. (e.g. 6789012345)';
+            errorDiv.style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            errorDiv.style.display = 'none';
+        }
+
+        validateForm();
+    });
+
+    // Auto-format & PAN Validation
+    $('#pan').on('input', function () {
+        let panInput = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10); // remove invalid chars & limit
+        this.value = panInput;
+
+        const panPattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+        const errorDiv = document.getElementById('panError');
+
+        if (panInput.trim() === '') {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'PAN is required.';
+            errorDiv.style.display = 'block';
+        } else if (!panPattern.test(panInput)) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'PAN format is invalid (e.g. ABCDE1234F)';
+            errorDiv.style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            errorDiv.style.display = 'none';
+        }
+        validateForm();
     });
     
-    // Auto-format GSTIN input
-    $('#gstin').on('input', function() {
-        this.value = this.value.toUpperCase();
+    // Auto-format & GSTIN Validation
+    $('#gstin').on('input', function () {
+        let gstinInput = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15); // sanitize input
+        this.value = gstinInput;
+
+        const gstinPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+        const errorDiv = document.getElementById('gstinError');
+
+        if (gstinInput.trim() === '') {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'GSTIN is required.';
+            errorDiv.style.display = 'block';
+        } else if (!gstinPattern.test(gstinInput)) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'GSTIN format is invalid (e.g. 22ABCDE1234F1Z5)';
+            errorDiv.style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            errorDiv.style.display = 'none';
+        }
+        validateForm();
+    });
+
+
+    // Date Validation
+    $('#date_of_birth, #incorporation_date').on('input', function () {
+        const date = this.value;
+        const errorDivId = this.id === 'date_of_birth' ? 'dobError' : 'incorpError';
+        const errorDiv = document.getElementById(errorDivId);
+
+        if (!date) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            errorDiv.style.display = 'none';
+        }
+        validateForm();
     });
     
     // Show/hide date fields based on client type
